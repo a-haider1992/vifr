@@ -13,6 +13,7 @@ from backbone.aifr import backbone_dict, AgeEstimationModule
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
 from common.datasetV2 import TrainDataset, EvaluationDataset
+import pdb
 
 
 class FR(BasicTask):
@@ -32,8 +33,8 @@ class FR(BasicTask):
         train_dataset = TrainImageDataset(opt.dataset_name, train_transform)
 
         ## VIFR approach
-        train_dataset_vifr = TrainDataset(opt.dataset_name, train_transform)
-
+        # train_dataset = TrainDataset(opt.dataset_name, train_transform)
+        # pdb.set_trace()
         evaluation_transform = transforms.Compose(
             [
                 transforms.RandomHorizontalFlip(),
@@ -46,7 +47,7 @@ class FR(BasicTask):
         evaluation_dataset = EvaluationImageDataset(opt.evaluation_dataset, evaluation_transform)
 
         ## VIFR approach
-        evaluation_dataset_vifr = EvaluationDataset(opt.evaluation_dataset, evaluation_transform)
+        # evaluation_dataset = EvaluationDataset(opt.evaluation_dataset, evaluation_transform)
 
         weights = None
         sampler = RandomSampler(train_dataset, batch_size=opt.batch_size,

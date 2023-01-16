@@ -8,6 +8,7 @@ from common.data_prefetcher import DataPrefetcher
 from common.ops import convert_to_ddp
 from . import BasicTask
 from common.dataset import AgingDataset
+from common.datasetV2 import AgingDatasetV2
 
 
 class FAS(BasicTask):

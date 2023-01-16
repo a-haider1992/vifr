@@ -10,6 +10,7 @@ import random
 
 
 from common.ops import age2group
+import pdb
 
 
 ## VIFR CustomDatasets --------------------------------------------------------------------------
@@ -17,34 +18,37 @@ class VIFRDataset(tordata.Dataset):
     def __init__(self, dataset_name, transform=None):
         self.transform = transform
         self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset')
-        self.image_label = None
-        with open(osp.join(self.root, dataset_name, '/annotated.txt'), 'w') as f:
-            self.labels = f.readlines()
-            self.image_label = {index: label for index, label in enumerate(self.labels)}
+        self.image_labels = None
+        self.image_list = None
+        pdb.set_trace()
+        with open(osp.join(self.root, dataset_name, 'annotated.txt'), 'r') as f:
+            contents = f.read()
+            self.image_labels = {index: label for index, label in enumerate(contents.splitlines())}
+            self.image_list = [osp.join(self.root, dataset_name, label) for _, label in enumerate(contents.splitlines())]
     def __getitem__(self, index):
-        return self.image_label[index]
+        return self.image_labels[index]
     def __len__(self):
-        return len(self.image_label)
+        return len(self.image_labels)
 
 class TrainDataset(VIFRDataset):
     def __init__(self, dataset_name, transform=None):
-        super().__init__(dataset_name+'/training', transform)
+        super().__init__(osp.join(dataset_name, 'training'), transform)
 
     def __getitem__(self, index):
         img = pil_loader(self.image_list[index])
         if self.transform is not None:
             img = self.transform(img)
-        label = self.image_label[index].split('_')
+        label = self.image_labels[index].split('_')
         age = label[0]
         gender = label[1]
         race = label[2]
         return img, age, gender, race
     def __len__(self):
-        return len(self.image_label)
+        return len(self.image_labels)
 
 class EvaluationDataset(VIFRDataset):
     def __init__(self, dataset_name, transform=None):
-        super().__init__(dataset_name+'/evaluation', transform)
+        super().__init__(osp.join(dataset_name, 'evaluation'), transform)
     def __getitem__(self, index):
         img = pil_loader(self.image_list[index])
         if self.transforms is not None:
@@ -53,17 +57,19 @@ class EvaluationDataset(VIFRDataset):
 
 
 ## Aging Dataset V2#
-class AgingDataset(VIFRDataset):
+class AgingDatasetV2(VIFRDataset):
     def __init__(self, dataset_name, age_group, total_pairs, transform=None):
         super().__init__(dataset_name, transform)
         self.ages = []
         self.genders = []
-        self.ids = []
-        for _, label in self.image_label.items():
+        self.image_names = []
+        for _, label in self.image_labels.items():
             label_value = label.split('_')
-            self.ids.append(label_value[3])
+            self.image_names.append(label_value[3])
             self.ages.append(label_value[0])
-            self.genders.append(label_value[2])
+            self.genders.append(label_value[1])
+        ## age2group function takes list of age, and generate age groups for each element
+        pdb.set_trace()
         self.groups = age2group(self.ages, age_group=age_group).astype(int)
         self.label_group_images = []
         for i in range(age_group):

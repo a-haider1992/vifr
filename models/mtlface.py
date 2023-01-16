@@ -4,6 +4,7 @@ import tqdm
 from .fr import FR
 from .fas import FAS
 from common.ops import load_network
+import os.path as osp
 
 '''
 python -m torch.distributed.launch --nproc_per_node=8 --master_port=17647 main.py \
@@ -116,10 +117,10 @@ class MTLFace(object):
     
     def evaluate(self):
         # evaluate trained model
-        acc = 0.0
         opt = self.opt
-        for n in tqdm.trange(opt.evaluation_num_iter):
-            x_image = self.fr.eval_prefetcher.next()
-            _, y_id, y_age = self.fr.backbone(x_image, return_age=True)
-            print("Evaluation: ", n, y_id, y_age)
-        return acc
+        with open(osp.join(osp.dirname(__file__), 'evaluation_output.txt'), 'w') as f:
+            for _ in tqdm.trange(opt.evaluation_num_iter):
+                x = self.fr.eval_prefetcher.next()
+                _, y_id, y_age = self.fr.backbone(x[0], return_age=True)
+                f.write(str(y_id) +" "+ str(x[1]))
+                
