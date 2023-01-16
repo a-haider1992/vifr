@@ -123,4 +123,3 @@ class MTLFace(object):
                 x = self.fr.eval_prefetcher.next()
                 _, y_id, y_age = self.fr.backbone(x[0], return_age=True)
                 f.write(str(y_id) +" "+ str(x[1]))
-                
