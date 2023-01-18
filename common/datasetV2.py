@@ -26,7 +26,7 @@ class VIFRDataset(tordata.Dataset):
             self.image_labels = {index: label for index, label in enumerate(contents.splitlines())}
             self.image_list = [osp.join(self.root, dataset_name, label) for _, label in enumerate(contents.splitlines())]
     def __getitem__(self, index):
-        return self.image_labels[index]
+        return self.image_list[index], self.image_labels[index]
     def __len__(self):
         return len(self.image_labels)
 
@@ -51,9 +51,13 @@ class EvaluationDataset(VIFRDataset):
         super().__init__(osp.join(dataset_name, 'evaluation'), transform)
     def __getitem__(self, index):
         img = pil_loader(self.image_list[index])
-        if self.transforms is not None:
-            img = self.transforms(img)
-        return img
+        if self.transform is not None:
+            img = self.transform(img)
+        label = self.image_labels[index].split('_')
+        age = label[0]
+        gender = label[1]
+        race = label[2]
+        return img, age, gender, race
 
 
 ## Aging Dataset V2#
