@@ -58,7 +58,7 @@ class FR(BasicTask):
             num_workers=opt.num_worker, drop_last=True
         )
 
-        evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset)
+        evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset, batch_size=opt.batch_size)
 
         # Train Prefetcher
         self.prefetcher = DataPrefetcher(train_loader)
