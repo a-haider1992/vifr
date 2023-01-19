@@ -22,6 +22,7 @@ class BaseImageDataset(tordata.Dataset):
 class EvaluationImageDataset(BaseImageDataset):
     def __init__(self, dataset_name, transforms=None):
         super(EvaluationImageDataset, self).__init__(dataset_name, transforms=transforms)
+        self.ids = self.data[:, 0].astype(int)
 
     def __getitem__(self, index):
         img = pil_loader(self.image_list[index])
