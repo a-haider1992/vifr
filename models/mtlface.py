@@ -121,7 +121,7 @@ class MTLFace(object):
         with open(osp.join(osp.dirname(__file__), 'evaluation_output.txt'), 'w') as f:
             for _ in tqdm.trange(opt.evaluation_num_iter):
                 image, label  = self.fr.eval_prefetcher.next()
-                embedding, x_id, x_age = self.backbone(image, return_age=True)
-                label_out = self.head(embedding)
+                embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
+                label_out = self.fr.head(embedding)
                 # if id == y_id:
                 f.write(str(label) +", "+ str(label_out)+ '\n')
