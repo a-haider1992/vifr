@@ -16,7 +16,4 @@ if __name__ == '__main__':
     torch.cuda.set_device(dist.get_rank())
     model = MTLFace(opt)
     model.fit()
-    evaluation_accuracy = model.evaluate()
-    with open('Evaluation_Output.txt', 'w') as f:
-        f.write(str(evaluation_accuracy))
-
+    model.evaluate()
