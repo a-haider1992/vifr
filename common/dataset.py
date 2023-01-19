@@ -27,8 +27,8 @@ class EvaluationImageDataset(BaseImageDataset):
         img = pil_loader(self.image_list[index])
         if self.transforms is not None:
             img = self.transforms(img)
-        id = self.image_list[index].split('/')[1]
-        return img, id
+        label = self.ids[index]
+        return img, label
 
 
 class TrainImageDataset(BaseImageDataset):
