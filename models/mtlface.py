@@ -122,5 +122,5 @@ class MTLFace(object):
             for _ in tqdm.trange(opt.evaluation_num_iter):
                 image, id  = self.fr.eval_prefetcher.next()
                 _, y_id, y_age = self.fr.backbone(image, return_age=True)
-                if id == y_id:
-                    f.write(str(y_id) +", "+ str(y_age)+ '\n')
+                # if id == y_id:
+                f.write(str(y_id) +", "+ str(id)+ '\n')
