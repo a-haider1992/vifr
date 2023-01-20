@@ -29,9 +29,11 @@ class MTLFace(object):
         self.fr.set_model()
         if opt.train_fas:
             if opt.id_pretrained_path is not None:
-                self.fr.backbone.load_state_dict(load_network(opt.id_pretrained_path))
+                self.fr.backbone.load_state_dict(
+                    load_network(opt.id_pretrained_path))
             if opt.age_pretrained_path is not None:
-                self.fr.estimation_network.load_state_dict(load_network(opt.age_pretrained_path))
+                self.fr.estimation_network.load_state_dict(
+                    load_network(opt.age_pretrained_path))
             self.fas = FAS(opt)
             self.fas.set_loader()
             self.fas.set_model()
@@ -41,55 +43,84 @@ class MTLFace(object):
         parser = argparse.ArgumentParser()
 
         parser.add_argument("--train_fr", help='train_fr', action='store_true')
-        parser.add_argument("--train_fas", help='train_fas', action='store_true')
+        parser.add_argument("--train_fas", help='train_fas',
+                            action='store_true')
 
         # BACKBONE, HEAD
         parser.add_argument("--backbone_name", help='backbone', type=str)
-        parser.add_argument("--head_s", help='s of cosface or arcface', type=float, default=64)
-        parser.add_argument("--head_m", help='m of cosface or arcface', type=float, default=0.35)
+        parser.add_argument(
+            "--head_s", help='s of cosface or arcface', type=float, default=64)
+        parser.add_argument(
+            "--head_m", help='m of cosface or arcface', type=float, default=0.35)
 
         # OPTIMIZED
-        parser.add_argument("--weight_decay", help='weight-decay', type=float, default=5e-4)
-        parser.add_argument("--momentum", help='momentum', type=float, default=0.9)
+        parser.add_argument(
+            "--weight_decay", help='weight-decay', type=float, default=5e-4)
+        parser.add_argument("--momentum", help='momentum',
+                            type=float, default=0.9)
 
         # LOSS
-        parser.add_argument("--fr_age_loss_weight", help='age loss weight', type=float, default=0.0)
+        parser.add_argument("--fr_age_loss_weight",
+                            help='age loss weight', type=float, default=0.0)
         parser.add_argument("--fr_da_loss_weight", help='cross age domain adaption loss weight', type=float,
                             default=0.0)
-        parser.add_argument("--age_group", help='age_group', default=7, type=int)
+        parser.add_argument("--age_group", help='age_group',
+                            default=7, type=int)
 
         # LR
-        parser.add_argument("--gamma", help='learning-rate gamma', type=float, default=0.1)
-        parser.add_argument("--milestone", help='milestones', type=int, nargs='*', default=[20, 40, 60])
-        parser.add_argument("--warmup", help='learning rate warmup epoch', type=int, default=5)
-        parser.add_argument("--learning_rate", help='learning-rate', type=float, default=0.1)
+        parser.add_argument(
+            "--gamma", help='learning-rate gamma', type=float, default=0.1)
+        parser.add_argument("--milestone", help='milestones',
+                            type=int, nargs='*', default=[20, 40, 60])
+        parser.add_argument(
+            "--warmup", help='learning rate warmup epoch', type=int, default=5)
+        parser.add_argument("--learning_rate",
+                            help='learning-rate', type=float, default=0.1)
 
         # TRAINING
-        parser.add_argument("--dataset_name", "-d", help='input image size', type=str)
-        parser.add_argument("--image_size", help='input image size', default=224, type=int)
-        parser.add_argument("--num_iter", help='total epochs', type=int, default=125)
-        parser.add_argument("--restore_iter", help='restore_iter', default=0, type=int)
-        parser.add_argument("--batch_size", help='batch-size', default=0, type=int)
-        parser.add_argument("--val_interval", help='val dataset interval iteration', type=int, default=1000)
+        parser.add_argument("--dataset_name", "-d",
+                            help='input image size', type=str)
+        parser.add_argument(
+            "--image_size", help='input image size', default=224, type=int)
+        parser.add_argument(
+            "--num_iter", help='total epochs', type=int, default=125)
+        parser.add_argument(
+            "--restore_iter", help='restore_iter', default=0, type=int)
+        parser.add_argument(
+            "--batch_size", help='batch-size', default=0, type=int)
+        parser.add_argument(
+            "--val_interval", help='val dataset interval iteration', type=int, default=1000)
 
-        parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
-        parser.add_argument("--num_worker", help='dataloader num-worker', default=32, type=int)
-        parser.add_argument("--local_rank", help='local process rank, not need to be set.', default=0, type=int)
+        parser.add_argument('--seed', type=int, default=1,
+                            metavar='S', help='random seed (default: 1)')
+        parser.add_argument(
+            "--num_worker", help='dataloader num-worker', default=32, type=int)
+        parser.add_argument(
+            "--local_rank", help='local process rank, not need to be set.', default=0, type=int)
 
         parser.add_argument("--amp", help='amp', action='store_true')
 
         # TESTING
-        parser.add_argument("--evaluation_dataset", help='Evaluation Dataset', type=str)
-        parser.add_argument("--evaluation_num_iter", help='Number of evaluation epochs', default=5000, type=int)
+        parser.add_argument("--evaluation_dataset",
+                            help='Evaluation Dataset', type=str)
+        parser.add_argument("--evaluation_num_iter",
+                            help='Number of evaluation epochs', default=5000, type=int)
 
         # FAS
-        parser.add_argument("--d_lr", help='learning-rate', type=float, default=1e-4)
-        parser.add_argument("--g_lr", help='learning-rate', type=float, default=1e-4)
-        parser.add_argument("--fas_gan_loss_weight", help='gan_loss_weight', type=float)
-        parser.add_argument("--fas_id_loss_weight", help='id_loss_weight', type=float)
-        parser.add_argument("--fas_age_loss_weight", help='age_loss_weight', type=float)
-        parser.add_argument("--id_pretrained_path", help='id_pretrained_path', type=str)
-        parser.add_argument("--age_pretrained_path", help='age_pretrained_path', type=str)
+        parser.add_argument("--d_lr", help='learning-rate',
+                            type=float, default=1e-4)
+        parser.add_argument("--g_lr", help='learning-rate',
+                            type=float, default=1e-4)
+        parser.add_argument("--fas_gan_loss_weight",
+                            help='gan_loss_weight', type=float)
+        parser.add_argument("--fas_id_loss_weight",
+                            help='id_loss_weight', type=float)
+        parser.add_argument("--fas_age_loss_weight",
+                            help='age_loss_weight', type=float)
+        parser.add_argument("--id_pretrained_path",
+                            help='id_pretrained_path', type=str)
+        parser.add_argument("--age_pretrained_path",
+                            help='age_pretrained_path', type=str)
 
         return parser
 
@@ -114,14 +145,16 @@ class MTLFace(object):
                     self.fr.validate(n_iter)
                 if opt.train_fas:
                     self.fas.validate(n_iter)
-    
+
     def evaluate(self):
         # evaluate trained model
         opt = self.opt
-        with open(osp.join(osp.dirname(__file__), 'evaluation_output.txt'), 'w') as f:
-            for _ in tqdm.trange(opt.evaluation_num_iter):
-                image, label  = self.fr.eval_prefetcher.next()
-                embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
-                label_out = self.fr.head(embedding, label)
-                # if id == y_id:
-                f.write(str(label) +",---"+ str(label_out)+ '\n')
+        # with open(osp.join(osp.dirname(__file__), 'evaluation_output.txt'), 'w') as f:
+        for _ in tqdm.trange(opt.evaluation_num_iter):
+            image, label = self.fr.eval_prefetcher.next()
+            embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
+            label_out = self.fr.head(embedding, label)
+            print("Predicted Label:",label_out)
+            print("Actual Label:", label)
+            # if id == y_id:
+            # f.write(str(label) +",---"+ str(label_out)+ '\n')
