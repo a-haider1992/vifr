@@ -124,4 +124,4 @@ class MTLFace(object):
                 embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
                 label_out = self.fr.head(embedding, label)
                 # if id == y_id:
-                f.write(str(label) +", "+ str(label_out)+ '\n')
+                f.write(str(label) +",---"+ str(label_out)+ '\n')
