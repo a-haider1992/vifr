@@ -149,12 +149,8 @@ class MTLFace(object):
     def evaluate(self):
         # evaluate trained model
         opt = self.opt
-        # with open(osp.join(osp.dirname(__file__), 'evaluation_output.txt'), 'w') as f:
-        for _ in tqdm.trange(opt.evaluation_num_iter):
-            image, label = self.fr.eval_prefetcher.next()
-            embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
-            label_out = self.fr.head(embedding, label)
-            print("Predicted Label:",label_out)
-            print("Actual Label:", label)
-            # if id == y_id:
-            # f.write(str(label) +",---"+ str(label_out)+ '\n')
+        with open(osp.join(osp.dirname(__file__), 'evaluation_output.txt'), 'w') as f:
+            for _ in tqdm.trange(opt.evaluation_num_iter):
+                image, label = self.fr.eval_prefetcher.next()
+                embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
+                f.write(str(x_id) + ",---" + str(label) + '\n')
