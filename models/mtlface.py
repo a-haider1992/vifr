@@ -149,8 +149,19 @@ class MTLFace(object):
     def evaluate(self):
         # evaluate trained model
         opt = self.opt
-        with open(osp.join(osp.dirname(__file__), 'evaluation_output.txt'), 'w') as f:
-            for _ in tqdm.trange(opt.evaluation_num_iter):
-                image, label = self.fr.eval_prefetcher.next()
-                embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
-                f.write(str(x_id) + ",---" + str(label) + '\n')
+        from torchvision.datasets.folder import pil_loader
+        import torch
+        head_model = self.fr.head
+        backbone_model = self.fr.backbone
+        print("MTL Face is under evaluation.")
+        self.fr.head.eval()
+        self.fr.backbone.eval()
+        this_dir = osp.dirname(__file__)
+        path = osp.join(this_dir, 'test_rowan.jpg')
+        img = pil_loader(path)
+        img = self.fr.train_transform(img)
+        embed, id_ten, age_ten = self.fr.backbone(img.unsqueeze(0), return_age=True)
+        pred_label = self.fr.head(embed, torch.tensor(0, dtype=torch.int8))
+        with open('evaluation.txt', 'w') as f:
+            f.write("The predicted class---------------------------")
+            f.write(str(torch.argmax(pred_label)))

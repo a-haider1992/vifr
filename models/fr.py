@@ -21,7 +21,7 @@ class FR(BasicTask):
     def set_loader(self):
         opt = self.opt
 
-        train_transform = transforms.Compose(
+        self.train_transform = transforms.Compose(
             [
                 transforms.RandomHorizontalFlip(),
                 transforms.Resize([opt.image_size, opt.image_size]),
@@ -30,7 +30,7 @@ class FR(BasicTask):
             ])
         
         ## AIFR paper approach
-        train_dataset = TrainImageDataset(opt.dataset_name, train_transform)
+        train_dataset = TrainImageDataset(opt.dataset_name, self.train_transform)
 
         ## VIFR approach
         # train_dataset = TrainDataset(opt.dataset_name, train_transform)
