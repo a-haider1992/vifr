@@ -105,6 +105,8 @@ class MTLFace(object):
                             help='Evaluation Dataset', type=str)
         parser.add_argument("--evaluation_num_iter",
                             help='Number of evaluation epochs', default=5000, type=int)
+        parser.add_argument("--eval_batch_size",
+                            help='Batch size of evaluation', default=1, type=int)
 
         # FAS
         parser.add_argument("--d_lr", help='learning-rate',
@@ -148,20 +150,29 @@ class MTLFace(object):
 
     def evaluate(self):
         # evaluate trained model
-        opt = self.opt
-        from torchvision.datasets.folder import pil_loader
+        # opt = self.opt
+        # from torchvision.datasets.folder import pil_loader
         import torch
-        head_model = self.fr.head
-        backbone_model = self.fr.backbone
+        import pdb
+        import torch.nn.functional as F
         print("MTL Face is under evaluation.")
         self.fr.head.eval()
         self.fr.backbone.eval()
-        this_dir = osp.dirname(__file__)
-        path = osp.join(this_dir, 'test_rowan.jpg')
-        img = pil_loader(path)
-        img = self.fr.train_transform(img)
-        embed, id_ten, age_ten = self.fr.backbone(img.unsqueeze(0), return_age=True)
-        pred_label = self.fr.head(embed, torch.tensor(0, dtype=torch.int8))
-        with open('evaluation.txt', 'w') as f:
-            f.write("The predicted class---------------------------")
-            f.write(str(torch.argmax(pred_label)))
+        # this_dir = osp.dirname(__file__)
+        # path = osp.join(this_dir, 'test_rowan.jpg')
+        # img = pil_loader(path)
+        # img = self.fr.train_transform(img)
+        total_loss = 0
+        pdb.set_trace()
+        for _ in range(1, self.fr.eval_length):
+            image, label = self.fr.eval_prefetcher.next()
+            embed, id_ten, age_ten = self.fr.backbone(image)
+            pred_label = self.fr.head(embed, torch.tensor(0, dtype=torch.int32))
+            id_loss = F.cross_entropy(pred_label, label)
+            total_loss += id_loss
+        print("Total Id loss in evaluation:{}".format(total_loss))
+        # embed, id_ten, age_ten = self.fr.backbone(img.unsqueeze(0), return_age=True)
+        # pred_label = self.fr.head(embed, torch.tensor(0, dtype=torch.int8))
+        # with open('evaluation.txt', 'w') as f:
+        #     f.write("The predicted class---------------------------")
+        #     f.write(str(torch.argmax(pred_label)))

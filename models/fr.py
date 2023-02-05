@@ -34,7 +34,7 @@ class FR(BasicTask):
 
         ## VIFR approach
         # train_dataset = TrainDataset(opt.dataset_name, train_transform)
-        # pdb.set_trace()
+
         evaluation_transform = transforms.Compose(
             [
                 transforms.RandomHorizontalFlip(),
@@ -45,7 +45,7 @@ class FR(BasicTask):
 
         ## AIFR paper approach
         evaluation_dataset = EvaluationImageDataset(opt.evaluation_dataset, evaluation_transform)
-
+        self.eval_length = evaluation_dataset.__len__()
         ## VIFR approach
         # evaluation_dataset = EvaluationDataset(opt.evaluation_dataset, evaluation_transform)
 
@@ -58,7 +58,7 @@ class FR(BasicTask):
             num_workers=opt.num_worker, drop_last=True
         )
 
-        evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset, batch_size=opt.batch_size)
+        evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset, batch_size=opt.eval_batch_size)
 
         # Train Prefetcher
         self.prefetcher = DataPrefetcher(train_loader)
