@@ -104,7 +104,7 @@ class MTLFace(object):
         parser.add_argument("--evaluation_dataset",
                             help='Evaluation Dataset', type=str)
         parser.add_argument("--evaluation_num_iter",
-                            help='Number of evaluation epochs', default=5000, type=int)
+                            help='Number of evaluation epochs', default=5, type=int)
         parser.add_argument("--eval_batch_size",
                             help='Batch size of evaluation', default=1, type=int)
 
@@ -150,7 +150,7 @@ class MTLFace(object):
 
     def evaluate(self):
         # evaluate trained model
-        # opt = self.opt
+        opt = self.opt
         # from torchvision.datasets.folder import pil_loader
         import torch
         import pdb
@@ -163,14 +163,28 @@ class MTLFace(object):
         # img = pil_loader(path)
         # img = self.fr.train_transform(img)
         total_loss = 0
-        pdb.set_trace()
-        for _ in range(1, self.fr.eval_length):
+        total_correct_pred = 0
+        total_incorrect_pred = 0
+        total_iter = int(opt.evaluation_num_iter)
+        # pdb.set_trace()
+        for _ in range(0, total_iter):
             image, label = self.fr.eval_prefetcher.next()
-            embed, id_ten, age_ten = self.fr.backbone(image)
+            embed = self.fr.backbone(image)
             pred_label = self.fr.head(embed, torch.tensor(0, dtype=torch.int32))
             id_loss = F.cross_entropy(pred_label, label)
             total_loss += id_loss
-        print("Total Id loss in evaluation:{}".format(total_loss))
+            if torch.argmax(pred_label).item() == label:
+                total_correct_pred += 1
+            else:
+                total_incorrect_pred += 1
+        print("-----------------------------Summary------------------------------")
+        print("The MTLFace model is trained for {} iterations.".format(opt.num_iter))
+        print("The MTLFace model is evaluated {} times.".format(total_iter))
+        print("Average Identity loss in evaluation:{}".format(total_loss/total_iter))
+        print("During evaluation, the model corectly predicts {} number of times.".format(total_correct_pred))
+        print("During evaluation, the model incorrectly predicts {} number of times.".format(total_incorrect_pred))
+        print("Model Accuracy:{}".format(total_correct_pred/(total_correct_pred+total_incorrect_pred)))
+        print("-----------------------------oooooooooooooooo---------------------------------")
         # embed, id_ten, age_ten = self.fr.backbone(img.unsqueeze(0), return_age=True)
         # pred_label = self.fr.head(embed, torch.tensor(0, dtype=torch.int8))
         # with open('evaluation.txt', 'w') as f:
