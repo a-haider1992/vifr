@@ -4,6 +4,7 @@
 import torch.utils.data as tordata
 import os.path as osp
 import os
+import numpy as np
 import pandas, pdb
 from torchvision.datasets.folder import pil_loader
 
@@ -24,6 +25,7 @@ class LFWDataset(tordata.Dataset):
                 self.labels.append(name)
         # pdb.set_trace()
         self.image_count = df['images'].to_list()
+        self.classes = np.unique(self.labels)
         
     def __getitem__(self, index):
         image = pil_loader(self.images[index])
