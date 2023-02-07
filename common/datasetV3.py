@@ -31,6 +31,8 @@ class LFWDataset(tordata.Dataset):
             image = self.transform(image)
         label = self.labels[index]
         return image, label
+    def __len__(self):
+        return len(self.images)
 
 class TrainingData(LFWDataset):
     def __init__(self, file, transform):
@@ -41,6 +43,7 @@ class TrainingData(LFWDataset):
 
 class EvaluationData(LFWDataset):
     def __init__(self, file, transform):
+        pdb.set_trace()
         super().__init__(file, transform)
 
     def __getitem__(self, index):
