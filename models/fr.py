@@ -39,9 +39,12 @@ class FR(BasicTask):
         ## VIFR approach
         # train_dataset = TrainDataset(opt.dataset_name, train_transform)
 
+        ## Transform for LFW
+        lfw_transform = transforms.Compose([transforms.ToTensor()])
         ## LFW dataset
-        train_lfw_dataset = TrainingData('peopleDevTrain.csv', None)
-        test_lfw_dataset = EvaluationData('peopleDevTest.csv', None)
+        train_lfw_dataset = TrainingData('peopleDevTrain.csv', lfw_transform)
+        test_lfw_dataset = EvaluationData('peopleDevTest.csv', lfw_transform)
+        
 
         evaluation_transform = transforms.Compose(
             [
