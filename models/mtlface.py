@@ -100,6 +100,10 @@ class MTLFace(object):
 
         parser.add_argument("--amp", help='amp', action='store_true')
 
+        # GENERAL FACE RECOGNITION
+        parser.add_argument("--gfr", help='general face recognition without age', 
+                            action='store_true')
+
         # TESTING
         parser.add_argument("--evaluation_dataset",
                             help='Evaluation Dataset', type=str)
@@ -166,7 +170,7 @@ class MTLFace(object):
         total_correct_pred = 0
         total_incorrect_pred = 0
         total_iter = int(opt.evaluation_num_iter)
-        # pdb.set_trace()
+        pdb.set_trace()
         for _ in range(0, total_iter):
             image, label = self.fr.eval_prefetcher.next()
             embed = self.fr.backbone(image)

@@ -92,7 +92,12 @@ class FR(BasicTask):
 
         da_discriminator = AgeEstimationModule(input_size=opt.image_size, age_group=opt.age_group)
 
-        optimizer = torch.optim.SGD(list(backbone.parameters()) + \
+        if opt.gfr:
+            optimizer = torch.optim.SGD(list(backbone.parameters()) + \
+                                    list(head.parameters()), 
+                                    momentum=opt.momentum, lr=opt.learning_rate)
+        else:
+            optimizer = torch.optim.SGD(list(backbone.parameters()) + \
                                     list(head.parameters()) + \
                                     list(estimation_network.parameters()) + \
                                     list(da_discriminator.parameters()),
@@ -141,11 +146,17 @@ class FR(BasicTask):
     def train(self, inputs, n_iter):
         opt = self.opt
 
-        images, labels, ages, genders = inputs
         self.backbone.train()
         self.head.train()
-        self.da_discriminator.train()
-        self.estimation_network.train()
+
+        if opt.gfr:
+            ## For LFW type datasets
+            images, labels = inputs
+        else:
+            ## For casia-webface type datasets
+            images, labels, ages, genders = inputs
+            self.da_discriminator.train()
+            self.estimation_network.train()
 
         if opt.amp:
             with amp.autocast():
@@ -156,28 +167,40 @@ class FR(BasicTask):
         else:
             embedding, x_id, x_age = self.backbone(images, return_age=True)
 
-        ######## Train Face Recognition
-        id_loss = F.cross_entropy(self.head(embedding, labels), labels)
-        x_age, x_group = self.estimation_network(x_age)
-        age_loss = self.compute_age_loss(x_age, x_group, ages)
-        da_loss = self.forward_da(x_id, ages)
-        loss = id_loss + \
-               age_loss * opt.fr_age_loss_weight + \
-               da_loss * opt.fr_da_loss_weight
-
-        total_loss = loss
-        if opt.amp:
-            total_loss = self.scaler.scale(loss)
-        self.optimizer.zero_grad()
-        total_loss.backward()
-        apply_weight_decay(self.backbone, self.head, self.estimation_network,
-                           weight_decay_factor=opt.weight_decay, wo_bn=True)
-        if opt.amp:
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
-        else:
+        if opt.gfr:
+            ######## Train GFR only
+            id_loss = F.cross_entropy(self.head(embedding, labels), labels)
+            self.optimizer.zero_grad()
             self.optimizer.step()
+            id_loss.backward()
+            apply_weight_decay(self.backbone, self.head, 
+                               weight_decay_factor=opt.weight_decay, wo_bn=True)
+            id_loss = reduce_loss(id_loss)
+            lr = self.optimizer.param_groups[0]['lr']
+            self.logger.msg([id_loss, lr], n_iter)
+        else:
+            ######## Train Face Recognition with ages and genders
+            id_loss = F.cross_entropy(self.head(embedding, labels), labels)
+            x_age, x_group = self.estimation_network(x_age)
+            age_loss = self.compute_age_loss(x_age, x_group, ages)
+            da_loss = self.forward_da(x_id, ages)
+            loss = id_loss + \
+                age_loss * opt.fr_age_loss_weight + \
+                da_loss * opt.fr_da_loss_weight
 
-        id_loss, da_loss, age_loss = reduce_loss(id_loss, da_loss, age_loss)
-        lr = self.optimizer.param_groups[0]['lr']
-        self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
+            total_loss = loss
+            if opt.amp:
+                total_loss = self.scaler.scale(loss)
+            self.optimizer.zero_grad()
+            total_loss.backward()
+            apply_weight_decay(self.backbone, self.head, self.estimation_network,
+                            weight_decay_factor=opt.weight_decay, wo_bn=True)
+            if opt.amp:
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
+            else:
+                self.optimizer.step()
+
+            id_loss, da_loss, age_loss = reduce_loss(id_loss, da_loss, age_loss)
+            lr = self.optimizer.param_groups[0]['lr']
+            self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
