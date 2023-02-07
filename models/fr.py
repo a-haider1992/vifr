@@ -13,10 +13,14 @@ from backbone.aifr import backbone_dict, AgeEstimationModule
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
 from common.datasetV2 import TrainDataset, EvaluationDataset
+from common.datasetV3 import TrainingData, EvaluationData
 import pdb
 
 
 class FR(BasicTask):
+
+    def set_dataset(self):
+        pass
 
     def set_loader(self):
         opt = self.opt
@@ -30,10 +34,14 @@ class FR(BasicTask):
             ])
         
         ## AIFR paper approach
-        train_dataset = TrainImageDataset(opt.dataset_name, self.train_transform)
+        # train_dataset = TrainImageDataset(opt.dataset_name, self.train_transform)
 
         ## VIFR approach
         # train_dataset = TrainDataset(opt.dataset_name, train_transform)
+
+        ## LFW dataset
+        train_lfw_dataset = TrainingData('peopleDevTrain.csv', None)
+        test_lfw_dataset = EvaluationData('peopleDevTest.csv', None)
 
         evaluation_transform = transforms.Compose(
             [
@@ -44,21 +52,26 @@ class FR(BasicTask):
             ])
 
         ## AIFR paper approach
-        evaluation_dataset = EvaluationImageDataset(opt.evaluation_dataset, evaluation_transform)
-        self.eval_length = evaluation_dataset.__len__()
+        # evaluation_dataset = EvaluationImageDataset(opt.evaluation_dataset, evaluation_transform)
         ## VIFR approach
         # evaluation_dataset = EvaluationDataset(opt.evaluation_dataset, evaluation_transform)
 
         weights = None
-        sampler = RandomSampler(train_dataset, batch_size=opt.batch_size,
-                                num_iter=opt.num_iter, restore_iter=opt.restore_iter, weights=weights)
+        # sampler = RandomSampler(train_dataset, batch_size=opt.batch_size,
+        #                         num_iter=opt.num_iter, restore_iter=opt.restore_iter, weights=weights)
+
+        # train_loader = torch.utils.data.DataLoader(
+        #     train_dataset, batch_size=opt.batch_size, sampler=sampler, pin_memory=True,
+        #     num_workers=opt.num_worker, drop_last=True
+        # )
+
+        # evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset, pin_memory=True, num_workers=opt.num_worker)
 
         train_loader = torch.utils.data.DataLoader(
-            train_dataset, batch_size=opt.batch_size, sampler=sampler, pin_memory=True,
-            num_workers=opt.num_worker, drop_last=True
+            train_lfw_dataset, batch_size=opt.batch_size, num_workers=opt.num_worker, drop_last=True
         )
 
-        evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset, pin_memory=True, num_workers=opt.num_worker)
+        evaluation_loader = torch.utils.data.DataLoader(test_lfw_dataset, num_workers=opt.num_worker)
 
         # Train Prefetcher
         self.prefetcher = DataPrefetcher(train_loader)
