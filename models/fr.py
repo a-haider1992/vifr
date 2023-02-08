@@ -83,6 +83,10 @@ class FR(BasicTask):
         # Train Prefetcher
         self.prefetcher = DataPrefetcher(train_loader)
 
+        import pdb
+        pdb.set_trace()
+        data = self.fr.prefetcher.next()
+
         # Evaluation prefetcher
         self.eval_prefetcher = DataPrefetcher(evaluation_loader)
 
@@ -182,12 +186,13 @@ class FR(BasicTask):
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
             self.optimizer.zero_grad()
             self.optimizer.step()
-            id_loss.backward()
+            loss = id_loss
+            loss.backward()
             apply_weight_decay(self.backbone, self.head,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
             id_loss = reduce_loss(id_loss)
             lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg([id_loss, lr], n_iter)
+            self.logger.msg({'id_loss':id_loss, 'lr':lr}, n_iter)
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
