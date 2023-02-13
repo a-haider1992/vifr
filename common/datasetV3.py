@@ -10,18 +10,19 @@ from torchvision.datasets.folder import pil_loader
 
 class LFWDataset(tordata.Dataset):
     def __init__(self, file, transform=None):
-        pdb.set_trace()
         self.transform = transform
         self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'lfw')
         df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
         self.names = df['name'].to_list()
-        self.images = df['image'].to_list()
+        images_ = df['image'].to_list()
+        self.images = []
+        for idx in range(0, len(images_)):
+            self.images.append(os.path.join(self.root, self.names[idx], images_[idx]))
         self.labels = df['encoded_name'].astype(int).to_list()
         self.classes = np.unique(self.labels)
         
     def __getitem__(self, index):
-        image_path = osp.join(os.path.dirname(os.path.dirname(__file__)), self.images[index])
-        image = pil_loader(image_path)
+        image = pil_loader(self.images[index])
         if self.transform is not None:
             image = self.transform(image)
         label = self.labels[index]
