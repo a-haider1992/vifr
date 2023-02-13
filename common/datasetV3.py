@@ -20,7 +20,8 @@ class LFWDataset(tordata.Dataset):
         self.classes = np.unique(self.labels)
         
     def __getitem__(self, index):
-        image = pil_loader(self.images[index])
+        image_path = osp.join(os.path.dirname(os.path.dirname(__file__)), self.images[index])
+        image = pil_loader(image_path)
         if self.transform is not None:
             image = self.transform(image)
         label = self.labels[index]
