@@ -7,27 +7,16 @@ import os
 import numpy as np
 import pandas, pdb
 from torchvision.datasets.folder import pil_loader
-from sklearn import preprocessing
 
 class LFWDataset(tordata.Dataset):
     def __init__(self, file, transform=None):
-        # pdb.set_trace()
+        pdb.set_trace()
         self.transform = transform
         self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'lfw')
         df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
-        image_folder_path = df['name'].to_list()
-        self.labels = []
-        self.images = []
-        for idx, name in enumerate(image_folder_path):
-            image_folder_path[idx] = osp.join(self.root, name)
-            images_ = os.listdir(image_folder_path[idx])
-            for image in images_:
-                self.images.append(osp.join(image_folder_path[idx], image))
-                self.labels.append(name)
-        pdb.set_trace()
-        self.image_count = df['images'].to_list()
-        le = preprocessing.LabelEncoder()
-        self.labels = le.fit_transform(self.labels)
+        self.names = df['name'].to_list()
+        self.images = df['image'].to_list()
+        self.labels = df['encoded_name'].astype(int).to_list()
         self.classes = np.unique(self.labels)
         
     def __getitem__(self, index):
