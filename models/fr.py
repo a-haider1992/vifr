@@ -156,8 +156,9 @@ class FR(BasicTask):
     def train(self, inputs, n_iter):
         opt = self.opt
 
-        self.backbone.train()
-        self.head.train()
+        if opt.train_from_scratch:
+            self.backbone.train()
+            self.head.train()
 
         if opt.gfr:
             # For LFW type datasets

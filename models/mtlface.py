@@ -27,6 +27,9 @@ class MTLFace(object):
         self.fr = FR(opt)
         self.fr.set_loader()
         self.fr.set_model()
+        if opt.id_pretrained_path is not None:
+                self.fr.backbone.load_state_dict(
+                    load_network(opt.id_pretrained_path))
         if opt.train_fas:
             if opt.id_pretrained_path is not None:
                 self.fr.backbone.load_state_dict(
@@ -111,6 +114,7 @@ class MTLFace(object):
                             help='Number of evaluation epochs', default=5, type=int)
         parser.add_argument("--eval_batch_size",
                             help='Batch size of evaluation', default=1, type=int)
+        parser.add_argument("--train_from_scratch", help='Train models from scratch', action='store_true')
 
         # FAS
         parser.add_argument("--d_lr", help='learning-rate',
@@ -133,6 +137,9 @@ class MTLFace(object):
     def fit(self):
         opt = self.opt
         # training routine
+        ## freeze weights of backbone for transfer learning
+        for param in self.fr.backbone.parameters():
+            param.requires_grad = False
         for n_iter in tqdm.trange(opt.restore_iter + 1, opt.num_iter + 1, disable=(opt.local_rank != 0)):
             # img, label, age, gender
             fr_inputs = self.fr.prefetcher.next()
@@ -151,6 +158,8 @@ class MTLFace(object):
                     self.fr.validate(n_iter)
                 if opt.train_fas:
                     self.fas.validate(n_iter)
+        import torch
+        torch.save(self.fr.backbone.state_dict(), osp.dirname(osp.dirname(__file__)))
 
     def evaluate(self):
         # evaluate trained model
