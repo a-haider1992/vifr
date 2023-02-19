@@ -34,7 +34,7 @@ class FR(BasicTask):
             ])
 
         # AIFR paper approach
-        # train_dataset = TrainImageDataset(opt.dataset_name, self.train_transform)
+        #train_dataset = TrainImageDataset(opt.dataset_name, self.train_transform)
 
         # VIFR approach
         # train_dataset = TrainDataset(opt.dataset_name, train_transform)
@@ -46,8 +46,8 @@ class FR(BasicTask):
                 transforms.Resize([opt.image_size, opt.image_size])
             ])
         # LFW dataset
-        train_lfw_dataset = TrainingData('peopleDevTrain.csv', lfw_transform)
-        test_lfw_dataset = EvaluationData('peopleDevTest.csv', lfw_transform)
+        train_lfw_dataset = TrainingData('lfwTrain.csv', lfw_transform)
+        test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
 
         evaluation_transform = transforms.Compose(
             [
@@ -58,34 +58,31 @@ class FR(BasicTask):
             ])
 
         # AIFR paper approach
-        # evaluation_dataset = EvaluationImageDataset(opt.evaluation_dataset, evaluation_transform)
+        #evaluation_dataset = EvaluationImageDataset(opt.evaluation_dataset, evaluation_transform)
         # VIFR approach
         # evaluation_dataset = EvaluationDataset(opt.evaluation_dataset, evaluation_transform)
 
         weights = None
-        # sampler = RandomSampler(train_dataset, batch_size=opt.batch_size,
+        #sampler = RandomSampler(train_dataset, batch_size=opt.batch_size,
         #                         num_iter=opt.num_iter, restore_iter=opt.restore_iter, weights=weights)
 
-        # train_loader = torch.utils.data.DataLoader(
-        #     train_dataset, batch_size=opt.batch_size, sampler=sampler, pin_memory=True,
-        #     num_workers=opt.num_worker, drop_last=True
-        # )
+        #train_loader = torch.utils.data.DataLoader(
+          #   train_dataset, batch_size=opt.batch_size, sampler=sampler, pin_memory=True,
+          #   num_workers=opt.num_worker, drop_last=True
+         #)
 
-        # evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset, pin_memory=True, num_workers=opt.num_worker)
+        #evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset, batch_size=opt.eval_batch_size, pin_memory=True, num_workers=opt.num_worker)
 
+        sampler_lfw = RandomSampler(train_lfw_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
         train_loader = torch.utils.data.DataLoader(
-            train_lfw_dataset, batch_size=opt.batch_size, num_workers=opt.num_worker, drop_last=True
+           train_lfw_dataset, batch_size=opt.batch_size, sampler=sampler_lfw, num_workers=opt.num_worker, drop_last=True
         )
-
+    
         evaluation_loader = torch.utils.data.DataLoader(
-            test_lfw_dataset, num_workers=opt.num_worker)
+           test_lfw_dataset, num_workers=opt.num_worker)
 
         # Train Prefetcher
         self.prefetcher = DataPrefetcher(train_loader)
-
-        import pdb
-        pdb.set_trace()
-        data = self.fr.prefetcher.next()
 
         # Evaluation prefetcher
         self.eval_prefetcher = DataPrefetcher(evaluation_loader)
@@ -185,14 +182,13 @@ class FR(BasicTask):
             # Train GFR only
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
             self.optimizer.zero_grad()
+            id_loss.backward()
             self.optimizer.step()
-            loss = id_loss
-            loss.backward()
-            apply_weight_decay(self.backbone, self.head,
-                               weight_decay_factor=opt.weight_decay, wo_bn=True)
-            id_loss = reduce_loss(id_loss)
-            lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg({'id_loss':id_loss, 'lr':lr}, n_iter)
+            #apply_weight_decay(self.backbone, self.head,
+            #                   weight_decay_factor=opt.weight_decay, wo_bn=True)
+            #id_loss = reduce_loss(id_loss)
+            #lr = self.optimizer.param_groups[0]['lr']
+            # self.logger.msg({'id_loss':id_loss, 'lr':lr}, n_iter)
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
