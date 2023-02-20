@@ -137,9 +137,6 @@ class MTLFace(object):
     def fit(self):
         opt = self.opt
         # training routine
-        ## freeze weights of backbone for transfer learning
-        for param in self.fr.backbone.parameters():
-            param.requires_grad = False
         for n_iter in tqdm.trange(opt.restore_iter + 1, opt.num_iter + 1, disable=(opt.local_rank != 0)):
             # img, label, age, gender
             fr_inputs = self.fr.prefetcher.next()
@@ -159,7 +156,7 @@ class MTLFace(object):
                 if opt.train_fas:
                     self.fas.validate(n_iter)
         import torch
-        torch.save(self.fr.backbone.state_dict(), osp.dirname(osp.dirname(__file__)))
+        torch.save(self.fr.backbone.state_dict(), "saved_backbone")
 
     def evaluate(self):
         # evaluate trained model

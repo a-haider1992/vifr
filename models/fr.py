@@ -156,16 +156,15 @@ class FR(BasicTask):
     def train(self, inputs, n_iter):
         opt = self.opt
 
-        if opt.train_from_scratch:
-            self.backbone.train()
-            self.head.train()
-
         if opt.gfr:
             # For LFW type datasets
+            ## A pre-trained backbone is used
             images, labels = inputs
             embedding = self.backbone(images)
         else:
             # For casia-webface type datasets
+            self.backbone.train()
+            self.head.train()
             images, labels, ages, genders = inputs
             self.da_discriminator.train()
             self.estimation_network.train()
@@ -185,8 +184,8 @@ class FR(BasicTask):
             self.optimizer.zero_grad()
             id_loss.backward()
             self.optimizer.step()
-            #apply_weight_decay(self.backbone, self.head,
-            #                   weight_decay_factor=opt.weight_decay, wo_bn=True)
+            apply_weight_decay(self.backbone, self.head,
+                              weight_decay_factor=opt.weight_decay, wo_bn=True)
             #id_loss = reduce_loss(id_loss)
             #lr = self.optimizer.param_groups[0]['lr']
             # self.logger.msg({'id_loss':id_loss, 'lr':lr}, n_iter)
