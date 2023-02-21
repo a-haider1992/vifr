@@ -44,7 +44,6 @@ class FR(BasicTask):
                 transforms.Resize([opt.image_size, opt.image_size])
             ])
         
-        pdb.set_trace()
         if opt.dataset_name == "casia-webface":
             train_dataset = TrainImageDataset(
                 opt.dataset_name, self.train_transform)
@@ -64,6 +63,7 @@ class FR(BasicTask):
             # LFW dataset
             train_lfw_dataset = TrainingData('lfwTrain.csv', lfw_transform)
             test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
+            weights = None
             sampler_lfw = RandomSampler(
                 train_lfw_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
             train_loader = torch.utils.data.DataLoader(train_lfw_dataset,
