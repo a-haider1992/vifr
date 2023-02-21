@@ -16,7 +16,6 @@ from common.datasetV2 import TrainDataset, EvaluationDataset
 from common.datasetV3 import TrainingData, EvaluationData
 import pdb
 
-
 class FR(BasicTask):
 
     def set_dataset(self):
@@ -32,54 +31,51 @@ class FR(BasicTask):
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
-
-        # AIFR paper approach
-        #train_dataset = TrainImageDataset(opt.dataset_name, self.train_transform)
-
-        # VIFR approach
-        # train_dataset = TrainDataset(opt.dataset_name, train_transform)
-
-        # Transform for LFW
-        lfw_transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Resize([opt.image_size, opt.image_size])
-            ])
-        # LFW dataset
-        train_lfw_dataset = TrainingData('lfwTrain.csv', lfw_transform)
-        test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
-
-        evaluation_transform = transforms.Compose(
+        self.evaluation_transform = transforms.Compose(
             [
                 transforms.RandomHorizontalFlip(),
                 transforms.Resize([opt.image_size, opt.image_size]),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
+        lfw_transform = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Resize([opt.image_size, opt.image_size])
+            ])
+        
+        pdb.set_trace()
+        if opt.dataset_name == "casia-webface":
+            train_dataset = TrainImageDataset(
+                opt.dataset_name, self.train_transform)
+            evaluation_dataset = EvaluationImageDataset(
+                'casia-webface-eval', self.evaluation_transform)
+            weights = None
+            sampler = RandomSampler(train_dataset, batch_size=opt.batch_size,
+                                    num_iter=opt.num_iter, restore_iter=opt.restore_iter, weights=weights)
+            train_loader = torch.utils.data.DataLoader(train_dataset,
+                                                       batch_size=opt.batch_size, sampler=sampler, pin_memory=True,
+                                                       num_workers=opt.num_worker, drop_last=True)
+            evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset,
+                                                            batch_size=opt.eval_batch_size, pin_memory=True,
+                                                            num_workers=opt.num_worker)
 
-        # AIFR paper approach
-        #evaluation_dataset = EvaluationImageDataset(opt.evaluation_dataset, evaluation_transform)
-        # VIFR approach
-        # evaluation_dataset = EvaluationDataset(opt.evaluation_dataset, evaluation_transform)
-
-        weights = None
-        #sampler = RandomSampler(train_dataset, batch_size=opt.batch_size,
-        #                         num_iter=opt.num_iter, restore_iter=opt.restore_iter, weights=weights)
-
-        #train_loader = torch.utils.data.DataLoader(
-          #   train_dataset, batch_size=opt.batch_size, sampler=sampler, pin_memory=True,
-          #   num_workers=opt.num_worker, drop_last=True
-         #)
-
-        #evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset, batch_size=opt.eval_batch_size, pin_memory=True, num_workers=opt.num_worker)
-
-        sampler_lfw = RandomSampler(train_lfw_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
-        train_loader = torch.utils.data.DataLoader(
-           train_lfw_dataset, batch_size=opt.batch_size, sampler=sampler_lfw, num_workers=opt.num_worker, drop_last=True
-        )
-    
-        evaluation_loader = torch.utils.data.DataLoader(
-           test_lfw_dataset, num_workers=opt.num_worker)
+        elif opt.dataset_name == "lfw":
+            # LFW dataset
+            train_lfw_dataset = TrainingData('lfwTrain.csv', lfw_transform)
+            test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
+            sampler_lfw = RandomSampler(
+                train_lfw_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
+            train_loader = torch.utils.data.DataLoader(train_lfw_dataset,
+                                                       batch_size=opt.batch_size,
+                                                       sampler=sampler_lfw, num_workers=opt.num_worker,
+                                                       drop_last=True)
+            evaluation_loader = torch.utils.data.DataLoader(
+                test_lfw_dataset, num_workers=opt.num_worker)
+        elif opt.dataset_name == "UTK":
+            pass
+        else:
+            return Exception("Database doesn't exist.")
 
         # Train Prefetcher
         self.prefetcher = DataPrefetcher(train_loader)
@@ -100,8 +96,7 @@ class FR(BasicTask):
             input_size=opt.image_size, age_group=opt.age_group)
 
         if opt.gfr:
-            optimizer = torch.optim.SGD(list(backbone.parameters()) +
-                                        list(head.parameters()),
+            optimizer = torch.optim.SGD(list(head.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
         else:
             optimizer = torch.optim.SGD(list(backbone.parameters()) +
@@ -158,7 +153,7 @@ class FR(BasicTask):
 
         if opt.gfr:
             # For LFW type datasets
-            ## A pre-trained backbone is used
+            # A pre-trained backbone is used
             images, labels = inputs
             embedding = self.backbone(images)
         else:
@@ -185,9 +180,9 @@ class FR(BasicTask):
             id_loss.backward()
             self.optimizer.step()
             apply_weight_decay(self.backbone, self.head,
-                              weight_decay_factor=opt.weight_decay, wo_bn=True)
-            #id_loss = reduce_loss(id_loss)
-            #lr = self.optimizer.param_groups[0]['lr']
+                               weight_decay_factor=opt.weight_decay, wo_bn=True)
+            # id_loss = reduce_loss(id_loss)
+            # lr = self.optimizer.param_groups[0]['lr']
             # self.logger.msg({'id_loss':id_loss, 'lr':lr}, n_iter)
         else:
             # Train Face Recognition with ages and genders
