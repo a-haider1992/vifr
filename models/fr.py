@@ -180,8 +180,8 @@ class FR(BasicTask):
             self.optimizer.zero_grad()
             id_loss.backward()
             self.optimizer.step()
-            apply_weight_decay(self.backbone, self.head,
-                               weight_decay_factor=opt.weight_decay, wo_bn=True)
+            # apply_weight_decay(self.backbone, self.head,
+            #                    weight_decay_factor=opt.weight_decay, wo_bn=True)
             # id_loss = reduce_loss(id_loss)
             # lr = self.optimizer.param_groups[0]['lr']
             # self.logger.msg({'id_loss':id_loss, 'lr':lr}, n_iter)
@@ -200,8 +200,8 @@ class FR(BasicTask):
                 total_loss = self.scaler.scale(loss)
             self.optimizer.zero_grad()
             total_loss.backward()
-            apply_weight_decay(self.backbone, self.head, self.estimation_network,
-                               weight_decay_factor=opt.weight_decay, wo_bn=True)
+            # apply_weight_decay(self.backbone, self.head, self.estimation_network,
+            #                    weight_decay_factor=opt.weight_decay, wo_bn=True)
             if opt.amp:
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
@@ -210,5 +210,6 @@ class FR(BasicTask):
 
             id_loss, da_loss, age_loss = reduce_loss(
                 id_loss, da_loss, age_loss)
+            self.adjust_learning_rate(n_iter)
             lr = self.optimizer.param_groups[0]['lr']
             self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
