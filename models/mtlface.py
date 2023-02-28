@@ -180,28 +180,29 @@ class MTLFace(object):
         total_correct_pred = 0
         total_incorrect_pred = 0
         total_iter = int(opt.evaluation_num_iter)
-        for _ in range(0, total_iter):
-            image, label = self.fr.eval_prefetcher.next()
-            embed = self.fr.backbone(image)
-            pred_label = self.fr.head(embed, torch.tensor(0, dtype=torch.int32))
-            id_loss = F.cross_entropy(pred_label, label)
-            total_loss += id_loss
-            if torch.argmax(pred_label).item() == label.item():
-                total_correct_pred += 1
-            else:
-                total_incorrect_pred += 1
-                print("Predicted label:{} and actual label {}".format(torch.argmax(pred_label).item(), label.item()))
-        print("-----------------------------Summary------------------------------")
-        print("The size of predicted tensor:{}".format(pred_label.size()))
-        print("The MTLFace model is trained for {} iterations.".format(opt.num_iter))
-        print("The MTLFace model is evaluated {} times.".format(total_iter))
-        print("Average Identity loss in evaluation:{}".format(total_loss/total_iter))
-        print("During evaluation, the model corectly predicts {} number of classes.".format(total_correct_pred))
-        print("During evaluation, the model incorrectly predicts {} number of classes.".format(total_incorrect_pred))
-        print("Model Accuracy:{}".format(total_correct_pred/(total_correct_pred+total_incorrect_pred)))
-        print("-----------------------------oooooooooooooooo---------------------------------")
-        # embed, id_ten, age_ten = self.fr.backbone(img.unsqueeze(0), return_age=True)
-        # pred_label = self.fr.head(embed, torch.tensor(0, dtype=torch.int8))
-        # with open('evaluation.txt', 'w') as f:
-        #     f.write("The predicted class---------------------------")
-        #     f.write(str(torch.argmax(pred_label)))
+        with torch.no_grad():
+            for _ in range(0, total_iter):
+                image, label = self.fr.eval_prefetcher.next()
+                embed = self.fr.backbone(image)
+                pred_label = self.fr.head(embed, torch.tensor(0, dtype=torch.int32))
+                id_loss = F.cross_entropy(pred_label, label)
+                total_loss += id_loss
+                if torch.argmax(pred_label).item() == label.item():
+                    total_correct_pred += 1
+                else:
+                    total_incorrect_pred += 1
+                    print("Predicted label:{} and actual label {}".format(torch.argmax(pred_label).item(), label.item()))
+            print("-----------------------------Summary------------------------------")
+            print("The size of predicted tensor:{}".format(pred_label.size()))
+            print("The MTLFace model is trained for {} iterations.".format(opt.num_iter))
+            print("The MTLFace model is evaluated {} times.".format(total_iter))
+            print("Average Identity loss in evaluation:{}".format(total_loss/total_iter))
+            print("During evaluation, the model corectly predicts {} number of classes.".format(total_correct_pred))
+            print("During evaluation, the model incorrectly predicts {} number of classes.".format(total_incorrect_pred))
+            print("Model Accuracy:{}".format(total_correct_pred/(total_correct_pred+total_incorrect_pred)))
+            print("-----------------------------oooooooooooooooo---------------------------------")
+            # embed, id_ten, age_ten = self.fr.backbone(img.unsqueeze(0), return_age=True)
+            # pred_label = self.fr.head(embed, torch.tensor(0, dtype=torch.int8))
+            # with open('evaluation.txt', 'w') as f:
+            #     f.write("The predicted class---------------------------")
+            #     f.write(str(torch.argmax(pred_label)))
