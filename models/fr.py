@@ -192,7 +192,7 @@ class FR(BasicTask):
             x_age, x_group = self.estimation_network(x_age)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
             da_loss = self.forward_da(x_id, ages)
-            loss = id_loss * opt.fr_id_loss_weight + \
+            loss = id_loss + \
                 age_loss * opt.fr_age_loss_weight + \
                 da_loss * opt.fr_da_loss_weight
 
