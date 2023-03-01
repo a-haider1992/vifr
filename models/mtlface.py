@@ -169,6 +169,7 @@ class MTLFace(object):
         import torch
         import pdb
         import torch.nn.functional as F
+        torch.cuda.empty_cache()
         print("MTL Face is under evaluation.")
         self.fr.head.eval()
         self.fr.backbone.eval()
