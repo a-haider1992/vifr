@@ -44,11 +44,11 @@ class FR(BasicTask):
                 transforms.Resize([opt.image_size, opt.image_size])
             ])
         
-        if opt.dataset_name == "casia-webface":
+        if opt.dataset_name == "casia-webface" or opt.dataset_name == "scaf":
             train_dataset = TrainImageDataset(
                 opt.dataset_name, self.train_transform)
             evaluation_dataset = EvaluationImageDataset(
-                'casia-webface-eval', self.evaluation_transform)
+                opt.evaluation_dataset, self.evaluation_transform)
             weights = None
             sampler = RandomSampler(train_dataset, batch_size=opt.batch_size,
                                     num_iter=opt.num_iter, restore_iter=opt.restore_iter, weights=weights)
