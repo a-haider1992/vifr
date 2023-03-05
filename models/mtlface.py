@@ -158,9 +158,9 @@ class MTLFace(object):
                     self.fr.validate(n_iter)
                 if opt.train_fas:
                     self.fas.validate(n_iter)
-        import torch
-        if opt.id_pretrained_path is not None:
-            torch.save(self.fr.backbone.state_dict(), opt.dataset_name)
+        if opt.id_pretrained_path is None:
+            import torch
+            torch.save(self.fr.backbone.state_dict(), "trained_scaf_model")
 
     def evaluate(self):
         # evaluate trained model
