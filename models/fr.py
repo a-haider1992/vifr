@@ -96,8 +96,7 @@ class FR(BasicTask):
             input_size=opt.image_size, age_group=opt.age_group)
 
         if opt.gfr:
-            optimizer = torch.optim.SGD(list(backbone.parameters()) + 
-                                        list(head.parameters()),
+            optimizer = torch.optim.SGD(list(head.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
         else:
             optimizer = torch.optim.SGD(list(backbone.parameters()) +
