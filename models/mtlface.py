@@ -12,7 +12,7 @@ python -m torch.distributed.launch --nproc_per_node=8 --master_port=17647 main.p
     --weight_decay 5e-4 --momentum 0.9 --fr_age_loss_weight 0.001 --fr_da_loss_weight 0.002 --age_group 7 \
     --gamma 0.1 --milestone 20000 23000 --warmup 1000 --learning_rate 0.1 \
     --dataset_name scaf --image_size 112 --num_iter 36000 --batch_size 64 --amp
-    
+
 python -m torch.distributed.launch --nproc_per_node=8 --master_port=17647 main.py \
     --train_fas --backbone_name ir50 --age_group 7 \
     --dataset_name scaf --image_size 112 --num_iter 36000 --batch_size 64 \
@@ -28,8 +28,8 @@ class MTLFace(object):
         self.fr.set_loader()
         self.fr.set_model()
         if opt.id_pretrained_path is not None:
-                import torch
-                self.fr.backbone.load_state_dict(
+            import torch
+            self.fr.backbone.load_state_dict(
                     torch.load(opt.id_pretrained_path))
         if opt.train_fas:
             if opt.id_pretrained_path is not None:
@@ -158,9 +158,15 @@ class MTLFace(object):
                     self.fr.validate(n_iter)
                 if opt.train_fas:
                     self.fas.validate(n_iter)
-        if opt.id_pretrained_path is None:
-            import torch
-            torch.save(self.fr.backbone.state_dict(), "trained_scaf_model")
+
+    def save_model(self):
+        opt = self.opt
+        import torch.distributed as dist
+        if opt.id_pretrained_path is None and dist.get_rank() == 0:
+            import os, torch
+            root = os.path.dirname(__file__)
+            PATH = os.path.join(root, 'trained_scaf_model')
+            torch.save(self.fr.backbone.state_dict(), PATH)
 
     def evaluate(self):
         # evaluate trained model
