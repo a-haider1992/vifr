@@ -183,10 +183,10 @@ class FR(BasicTask):
             self.optimizer.zero_grad()
             id_loss.backward()
             self.optimizer.step()
-            self.adjust_learning_rate(n_iter)
             apply_weight_decay(self.backbone, self.head,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
             id_loss = reduce_loss(id_loss)
+            self.adjust_learning_rate(n_iter)
             lr = self.optimizer.param_groups[0]['lr']
             self.logger.msg([id_loss, lr], n_iter)
         else:
