@@ -103,14 +103,14 @@ class FR(BasicTask):
             # Freeze the weights of pre-trained backbone model
             for param in backbone.parameters():
                 param.requires_grad = False
+            head = convert_to_ddp(head)
         else:
             optimizer = torch.optim.SGD(list(backbone.parameters()) +
                                         list(head.parameters()) +
                                         list(estimation_network.parameters()) +
                                         list(da_discriminator.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
-
-        backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
+            backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
                                                                               da_discriminator)
         scaler = amp.GradScaler()
         self.optimizer = optimizer
