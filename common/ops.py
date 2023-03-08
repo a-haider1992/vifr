@@ -126,10 +126,10 @@ class LoggerX(object):
                 var = var.detach().mean()
                 var = reduce_tensor(var)
                 var = var.item()
-            print("-----------------------------------------")
-            print(var_name, var)
-            print("-----------------------------------------")
-            output_str += '{} {:2.5f}, '.format(var_name, var)
+            if isinstance(var, list):
+                output_str += '{} {:2.5f}, '.format(var_name, var[0])
+            else:
+                output_str += '{} {:2.5f}, '.format(var_name, var)
 
         if self.local_rank == 0:
             print(output_str)
