@@ -188,7 +188,7 @@ class FR(BasicTask):
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
             id_loss = reduce_loss(id_loss)
             lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg({'id_loss':id_loss, 'lr':lr}, n_iter)
+            self.logger.msg([id_loss, lr], n_iter)
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
