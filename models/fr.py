@@ -40,8 +40,10 @@ class FR(BasicTask):
             ])
         lfw_transform = transforms.Compose(
             [
+                transforms.RandomHorizontalFlip(),
+                transforms.Resize([opt.image_size, opt.image_size]),
                 transforms.ToTensor(),
-                transforms.Resize([opt.image_size, opt.image_size])
+                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
         
         if opt.dataset_name == "casia-webface" or opt.dataset_name == "scaf":
@@ -98,6 +100,9 @@ class FR(BasicTask):
         if opt.gfr:
             optimizer = torch.optim.SGD(list(head.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
+            # Freeze the weights of pre-trained backbone model
+            for param in backbone.parameters():
+                param.requires_grad = False
         else:
             optimizer = torch.optim.SGD(list(backbone.parameters()) +
                                         list(head.parameters()) +
@@ -182,9 +187,9 @@ class FR(BasicTask):
             self.adjust_learning_rate(n_iter)
             apply_weight_decay(self.backbone, self.head,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
-            # id_loss = reduce_loss(id_loss)
-            # lr = self.optimizer.param_groups[0]['lr']
-            # self.logger.msg({'id_loss':id_loss, 'lr':lr}, n_iter)
+            id_loss = reduce_loss(id_loss)
+            lr = self.optimizer.param_groups[0]['lr']
+            self.logger.msg({'id_loss':id_loss, 'lr':lr}, n_iter)
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
