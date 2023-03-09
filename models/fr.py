@@ -16,6 +16,7 @@ from common.datasetV2 import TrainDataset, EvaluationDataset
 from common.datasetV3 import TrainingData, EvaluationData
 import pdb
 
+
 class FR(BasicTask):
 
     def set_dataset(self):
@@ -45,7 +46,7 @@ class FR(BasicTask):
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
-        
+
         if opt.dataset_name == "casia-webface" or opt.dataset_name == "scaf":
             train_dataset = TrainImageDataset(
                 opt.dataset_name, self.train_transform)
@@ -109,8 +110,8 @@ class FR(BasicTask):
                                         list(estimation_network.parameters()) +
                                         list(da_discriminator.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
-        backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
-                                                                              da_discriminator)
+            backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
+                                                                                  da_discriminator)
         scaler = amp.GradScaler()
         self.optimizer = optimizer
         self.backbone = backbone
