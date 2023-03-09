@@ -110,7 +110,7 @@ class FR(BasicTask):
                                         list(estimation_network.parameters()) +
                                         list(da_discriminator.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
-            backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
+        backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
                                                                                   da_discriminator)
         scaler = amp.GradScaler()
         self.optimizer = optimizer
