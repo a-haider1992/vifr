@@ -101,8 +101,8 @@ class FR(BasicTask):
             optimizer = torch.optim.SGD(list(head.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
             # Freeze the weights of pre-trained backbone model
-            # for param in backbone.parameters():
-            #     param.requires_grad = False
+            for param in backbone.parameters():
+                param.requires_grad = False
         else:
             optimizer = torch.optim.SGD(list(backbone.parameters()) +
                                         list(head.parameters()) +
