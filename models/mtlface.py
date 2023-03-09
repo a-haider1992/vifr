@@ -28,9 +28,8 @@ class MTLFace(object):
         self.fr.set_loader()
         self.fr.set_model()
         if opt.id_pretrained_path is not None and not opt.train_fas:
-            import torch
             self.fr.backbone.load_state_dict(
-                    torch.load(opt.id_pretrained_path))
+                load_network(opt.id_pretrained_path))
         if opt.train_fas:
             if opt.id_pretrained_path is not None:
                 self.fr.backbone.load_state_dict(
@@ -162,11 +161,11 @@ class MTLFace(object):
     def save_model(self):
         opt = self.opt
         import torch.distributed as dist
+        import os, torch
         if opt.id_pretrained_path is None and dist.get_rank() == 0:
-            import os, torch
             root = os.path.dirname(__file__)
-            PATH = os.path.join(root, 'trained_scaf_model')
-            torch.save(self.fr.backbone.state_dict(), PATH)
+            PATH = os.path.join(root, 'trained_scaf_model.pt')
+            torch.save(self.fr.backbone.module.state_dict(), PATH)
 
     def evaluate(self):
         # evaluate trained model
