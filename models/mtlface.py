@@ -27,7 +27,7 @@ class MTLFace(object):
         self.fr = FR(opt)
         self.fr.set_loader()
         self.fr.set_model()
-        if opt.id_pretrained_path is not None:
+        if opt.id_pretrained_path is not None and not opt.train_fas:
             import torch
             self.fr.backbone.load_state_dict(
                     torch.load(opt.id_pretrained_path))
@@ -117,7 +117,7 @@ class MTLFace(object):
                             help='Number of evaluation epochs', default=5, type=int)
         parser.add_argument("--eval_batch_size",
                             help='Batch size of evaluation', default=1, type=int)
-        parser.add_argument("--train_from_scratch", help='Train models from scratch', action='store_true')
+        parser.add_argument("--evaluation_only", help='Evaluate the trained models', action='store_true')
 
         # FAS
         parser.add_argument("--d_lr", help='learning-rate',
