@@ -97,13 +97,15 @@ class FR(BasicTask):
 
         da_discriminator = AgeEstimationModule(
             input_size=opt.image_size, age_group=opt.age_group)
-
+        has_backbone_params = False
         if opt.gfr:
             optimizer = torch.optim.SGD(list(head.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
-            # Freeze the weights of pre-trained backbone model
-            for param in backbone.parameters():
-                param.requires_grad = False
+            # Freeze all layers except last
+            last_layer_name = list(backbone.named_modules())[-1][0]
+            for name, param in backbone.named_parameters():
+                if last_layer_name not in name:   # Skip the last layer
+                    param.requires_grad = False
         else:
             optimizer = torch.optim.SGD(list(backbone.parameters()) +
                                         list(head.parameters()) +
@@ -111,7 +113,7 @@ class FR(BasicTask):
                                         list(da_discriminator.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
         backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
-                                                                                  da_discriminator)
+                                                                              da_discriminator)
         scaler = amp.GradScaler()
         self.optimizer = optimizer
         self.backbone = backbone
