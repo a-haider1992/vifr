@@ -168,7 +168,7 @@ class MTLFace(object):
         if opt.id_pretrained_path is None and dist.get_rank() == 0:
             root = os.path.dirname(__file__)
             PATH = os.path.join(root, 'trained_scaf_model.pt')
-            torch.save(self.fr.backbone.module.state_dict(), PATH)
+            torch.save(self.fr.backbone.state_dict(), PATH)
 
     def evaluate(self):
         # evaluate trained model
