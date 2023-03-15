@@ -28,8 +28,11 @@ class MTLFace(object):
         self.fr.set_loader()
         self.fr.set_model()
         if opt.id_pretrained_path is not None and not opt.train_fas:
+            import torch
+            # self.fr.backbone.load_state_dict(
+            #     load_network(opt.id_pretrained_path))
             self.fr.backbone.load_state_dict(
-                load_network(opt.id_pretrained_path))
+                torch.load(opt.id_pretrained_path))
         if opt.train_fas:
             if opt.id_pretrained_path is not None:
                 self.fr.backbone.load_state_dict(
