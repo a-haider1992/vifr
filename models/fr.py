@@ -99,7 +99,8 @@ class FR(BasicTask):
             input_size=opt.image_size, age_group=opt.age_group)
         has_backbone_params = False
         if opt.gfr:
-            optimizer = torch.optim.SGD(list(head.parameters()),
+            optimizer = torch.optim.SGD(list(head.parameters()) +
+                                        list(backbone.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
             # Freeze all layers except last
             # last_layer_name = list(backbone.named_modules())[-1][0]
