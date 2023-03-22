@@ -64,8 +64,8 @@ class FR(BasicTask):
 
         elif opt.dataset_name == "lfw":
             # LFW dataset
-            train_lfw_dataset = TrainingData('lfwTrain.csv', lfw_transform)
-            test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
+            train_lfw_dataset = TrainingData('pairs.csv', lfw_transform)
+            # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
             weights = None
             sampler_lfw = RandomSampler(
                 train_lfw_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
@@ -73,8 +73,8 @@ class FR(BasicTask):
                                                        batch_size=opt.batch_size,
                                                        sampler=sampler_lfw, num_workers=opt.num_worker,
                                                        drop_last=True)
-            evaluation_loader = torch.utils.data.DataLoader(
-                test_lfw_dataset, num_workers=opt.num_worker)
+            # evaluation_loader = torch.utils.data.DataLoader(
+            #     test_lfw_dataset, num_workers=opt.num_worker)
         elif opt.dataset_name == "UTK":
             pass
         else:
@@ -83,8 +83,8 @@ class FR(BasicTask):
         # Train Prefetcher
         self.prefetcher = DataPrefetcher(train_loader)
 
-        # Evaluation prefetcher
-        self.eval_prefetcher = DataPrefetcher(evaluation_loader)
+        # # Evaluation prefetcher
+        # self.eval_prefetcher = DataPrefetcher(evaluation_loader)
 
     def set_model(self):
         opt = self.opt

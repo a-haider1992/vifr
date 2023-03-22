@@ -4,9 +4,18 @@
 import torch.utils.data as tordata
 import os.path as osp
 import os
-import numpy as np
-import pandas, pdb
+import pandas
 from torchvision.datasets.folder import pil_loader
+
+def find_image_paths(images, image_num1, image_num2):
+    for image in images:
+        parts = image.split('_')
+        num = parts[2]
+        if image_num1 in num:
+            image_num1 = parts[0]+'_'+parts[1]+'_'+num
+        if image_num2 in num:
+            image_num2 = parts[0]+'_'+parts[1]+'_'+num
+    return image_num1, image_num2
 
 class LFWDataset(tordata.Dataset):
     def __init__(self, file, transform=None):
@@ -14,19 +23,25 @@ class LFWDataset(tordata.Dataset):
         self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'lfw')
         df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
         self.names = df['name'].to_list()
-        images_ = df['image'].to_list()
-        self.images = []
-        for idx in range(0, len(images_)):
-            self.images.append(os.path.join(self.root, self.names[idx], images_[idx]))
-        self.labels = df['encoded_name'].astype(int).to_list()
-        self.classes = np.unique(self.labels)
+        image1 = df['imagenum1'].to_list()
+        image2 = df['imagenum2'].to_list()
+        self.images = {}
+        for idx in range(0, len(image1)):
+            images = os.listdir(os.path.join(self.root, self.names[idx]))
+            im1, im2 = find_image_paths(images, str(image1[idx]), str(image2[idx]))
+            self.images[idx] = [os.path.join(self.root, self.names[idx], im1), os.path.join(self.root, self.names[idx], im2)]
+        # for idx in range(0, len(images_)):
+        #     self.images.append(os.path.join(self.root, self.names[idx], images_[idx]))
+        # self.labels = df['encoded_name'].astype(int).to_list()
+        # self.classes = np.unique(self.labels)
         
     def __getitem__(self, index):
-        image = pil_loader(self.images[index])
+        image1 = pil_loader(self.images[index][0])
+        image2 = pil_loader(self.images[index][1])
         if self.transform is not None:
-            image = self.transform(image)
-        label = self.labels[index]
-        return image, label
+            image1 = self.transform(image1)
+            image2 = self.transform(image2)
+        return image1, image2
     def __len__(self):
         return len(self.images)
 
