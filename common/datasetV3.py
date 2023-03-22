@@ -10,11 +10,16 @@ from torchvision.datasets.folder import pil_loader
 def find_image_paths(images, image_num1, image_num2):
     for image in images:
         parts = image.split('_')
-        num = parts[2]
+        num = parts[len(parts)-1]
+        image_num1 = image_num2 = ''
         if image_num1 in num:
-            image_num1 = parts[0]+'_'+parts[1]+'_'+num
+            for idx in range(0, len(parts)-1):
+                image_num1 += parts[idx]+'_'
+            image_num1 += num
         if image_num2 in num:
-            image_num2 = parts[0]+'_'+parts[1]+'_'+num
+            for idx in range(0, len(parts)-1):
+                image_num2 += parts[idx]+'_'
+            image_num2 += num
     return image_num1, image_num2
 
 class LFWDataset(tordata.Dataset):
@@ -26,6 +31,8 @@ class LFWDataset(tordata.Dataset):
         image1 = df['imagenum1'].to_list()
         image2 = df['imagenum2'].to_list()
         self.images = {}
+        import pdb
+        pdb.set_trace()
         for idx in range(0, len(image1)):
             images = os.listdir(os.path.join(self.root, self.names[idx]))
             im1, im2 = find_image_paths(images, str(image1[idx]), str(image2[idx]))
