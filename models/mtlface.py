@@ -173,7 +173,7 @@ class MTLFace(object):
     def isSame(self, embed1, embed2):
         result = torch.eq(embed1, embed2)
         num_ones = torch.sum(result == 1).item()
-        if num_ones > (result.size()[0] * result.size()[1])/2.0:
+        if num_ones > (result.size()[0] * result.size()[1])/4.0:
             return True
         else:
             return False
