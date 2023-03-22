@@ -203,8 +203,8 @@ class MTLFace(object):
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred += 1
-                    print(embedding1)
-                    print(embedding2)
+                    # print(embedding1)
+                    # print(embedding2)
             print("During evaluation, the model corectly predicts {} number of classes.".format(total_correct_pred))
             print("During evaluation, the model incorrectly predicts {} number of classes.".format(total_incorrect_pred))
             print("Model Accuracy:{}".format(total_correct_pred/(total_correct_pred+total_incorrect_pred)))
