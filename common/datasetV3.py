@@ -31,8 +31,6 @@ class LFWDataset(tordata.Dataset):
         image1 = df['imagenum1'].to_list()
         image2 = df['imagenum2'].to_list()
         self.images = {}
-        import pdb
-        pdb.set_trace()
         for idx in range(0, len(image1)):
             images = os.listdir(os.path.join(self.root, self.names[idx]))
             im1, im2 = find_image_paths(images, str(image1[idx]), str(image2[idx]))
