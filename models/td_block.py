@@ -86,9 +86,6 @@ class TDTask(BasicTask):
                                          momentum=self.opt.momentum, lr=self.opt.learning_rate)
         self.criterion = nn.CrossEntropyLoss()
 
-    def __init__(self) -> None:
-        pass
-
     def adjust_learning_rate(self, step):
         assert step > 0, 'batch index should large than 0'
         opt = self.opt
@@ -100,6 +97,9 @@ class TDTask(BasicTask):
         lr = max(1e-4, lr)
         for param_group in self.optimizer.param_groups:
             param_group['lr'] = lr
+
+    def validate(self, n_iter):
+        pass
 
     def train(self, inputs, n_iter):
         opt = self.opt
