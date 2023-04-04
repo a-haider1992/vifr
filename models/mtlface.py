@@ -3,6 +3,7 @@ import tqdm
 
 from .fr import FR
 from .fas import FAS
+from .td_block import TDTask
 from common.ops import load_network
 import os.path as osp
 import os, torch
@@ -30,6 +31,12 @@ class MTLFace(object):
         self.fr = FR(opt)
         self.fr.set_loader()
         self.fr.set_model()
+        ##
+        # Set TD Task
+        self.td_task = TDTask(opt)
+        self.td_task.set_loader()
+        self.td_task.set_model()
+
         if opt.id_pretrained_path is not None and not opt.train_fas:
             # self.fr.backbone.load_state_dict(
             #     load_network(opt.id_pretrained_path))
@@ -110,6 +117,9 @@ class MTLFace(object):
 
         parser.add_argument("--amp", help='amp', action='store_true')
 
+        parser.add_argument("--model_save", "-s",
+                            help='save trained model path', type=str)
+
         # GENERAL FACE RECOGNITION
         parser.add_argument("--gfr", help='general face recognition without age', 
                             action='store_true')
@@ -163,11 +173,19 @@ class MTLFace(object):
                 if opt.train_fas:
                     self.fas.validate(n_iter)
 
+    def fit_VIT(self):
+        opt = self.opt
+        # training routine
+        for n_iter in tqdm.trange(opt.restore_iter + 1, opt.num_iter + 1, disable=(opt.local_rank != 0)):
+            # img, label, age, gender
+            td_inputs = self.td_task.prefetcher.next()
+            self.td_task.train(td_inputs, n_iter)
+
     def save_model(self):
         opt = self.opt
         if opt.id_pretrained_path is None and dist.get_rank() == 0:
             root = os.path.dirname(__file__)
-            PATH = os.path.join(root, 'trained_scaf_model.pt')
+            PATH = os.path.join(root, opt.model_save)
             torch.save(self.fr.backbone.state_dict(), PATH)
 
     def isSame(self, embed1, embed2):
@@ -178,7 +196,7 @@ class MTLFace(object):
         else:
             return False
 
-    def evaluate(self):
+    def evaluate_mtlface(self):
         # evaluate trained model
         opt = self.opt
         torch.cuda.empty_cache()
