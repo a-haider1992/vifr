@@ -201,7 +201,7 @@ class MyViT(nn.Module):
 
 class MSA(nn.Module):
     def __init__(self, d, n_heads=2) -> None:
-        # super(self.MSA, self).__init__()
+        super(self.MSA, self).__init__()
         self.d = d
         self.n_heads = n_heads
 
@@ -240,7 +240,8 @@ class MSA(nn.Module):
         return torch.cat([torch.unsqueeze(r, dim=0) for r in result])
 
 class MyViTBlock(nn.Module):
-    def __init__(self, hidden_d, n_heads, mlp_ratio=4):
+    def __init__(self, hidden_d, n_heads, mlp_ratio=4) -> None:
+        super(self.MyViTBlock, self).__init__()
         self.hidden_d = hidden_d
         self.n_heads = n_heads
 
