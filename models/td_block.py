@@ -31,6 +31,13 @@ class TDTask(BasicTask):
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
+        self.evaluation_transform = transforms.Compose(
+            [
+                transforms.RandomHorizontalFlip(),
+                transforms.Resize([opt.image_size, opt.image_size]),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
+            ])
         lfw_transform = transforms.Compose(
             [
                 transforms.RandomHorizontalFlip(),
@@ -81,7 +88,7 @@ class TDTask(BasicTask):
         opt = self.opt
         self.tdblock = self.MyViT((1, opt.image_size, opt.image_size), n_patches=8, n_blocks=2,
                                   hidden_d=8, n_heads=2, out_d=len(self.prefetcher.__loader__.dataset.classes))
-        self.tdblock = convert_to_ddp(self.tdblock)                
+        self.tdblock = convert_to_ddp(self.tdblock)
         self.optimizer = torch.optim.SGD(list(self.tdblock.parameters()),
                                          momentum=self.opt.momentum, lr=self.opt.learning_rate)
         self.criterion = nn.CrossEntropyLoss()
