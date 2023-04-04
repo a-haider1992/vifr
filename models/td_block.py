@@ -148,7 +148,9 @@ def get_positional_embeddings(sequence_length, d):
     return result
 
 class MyViT(nn.Module):
-    def __init__(self, chw, n_patches, n_blocks, hidden_d, n_heads, out_d):
+    def __init__(self, chw, n_patches, n_blocks, hidden_d, n_heads, out_d) -> None:
+        super().__init__()
+
         self.chw = chw
         self.n_patches = n_patches
         self.hidden_d = hidden_d
@@ -198,7 +200,8 @@ class MyViT(nn.Module):
         return self.mlp(out)
 
 class MSA(nn.Module):
-    def __init__(self, d, n_heads=2):
+    def __init__(self, d, n_heads=2) -> None:
+        # super(self.MSA, self).__init__()
         self.d = d
         self.n_heads = n_heads
 
