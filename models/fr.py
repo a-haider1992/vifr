@@ -9,6 +9,7 @@ from common.data_prefetcher import DataPrefetcher
 from common.ops import convert_to_ddp, get_dex_age, age2group, apply_weight_decay, reduce_loss
 from common.grl import GradientReverseLayer
 from . import BasicTask
+from .td_block import MyViT
 from backbone.aifr import backbone_dict, AgeEstimationModule
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
@@ -91,9 +92,14 @@ class FR(BasicTask):
         backbone = backbone_dict[opt.backbone_name](input_size=opt.image_size)
         head = CosFace(in_features=512, out_features=len(self.prefetcher.__loader__.dataset.classes),
                        s=opt.head_s, m=opt.head_m)
-
-        estimation_network = AgeEstimationModule(
-            input_size=opt.image_size, age_group=opt.age_group)
+        
+        ## if age estimation network to TD block VIT
+        if opt.td_block:
+            estimation_network = MyViT((1, opt.image_size, opt.image_size), n_patches=8, n_blocks=2,
+                                  hidden_d=8, n_heads=2, out_d=101, age_group=opt.age_group)
+        else:
+            estimation_network = AgeEstimationModule(
+                input_size=opt.image_size, age_group=opt.age_group)
 
         da_discriminator = AgeEstimationModule(
             input_size=opt.image_size, age_group=opt.age_group)
@@ -197,7 +203,11 @@ class FR(BasicTask):
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
-            x_age, x_group = self.estimation_network(x_age)
+            ## If using VIT then feed images directly to estimation network
+            if opt.td_block:
+                x_age, x_group = self.estimation_network(images)
+            else:
+                x_age, x_group = self.estimation_network(x_age)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
             da_loss = self.forward_da(x_id, ages)
             loss = id_loss + \

@@ -119,6 +119,7 @@ class MTLFace(object):
 
         parser.add_argument("--model_save", "-s",
                             help='save trained model path', type=str)
+        parser.add_argument("--td_block", help='Use VIT', action='store_true')
 
         # GENERAL FACE RECOGNITION
         parser.add_argument("--gfr", help='general face recognition without age', 

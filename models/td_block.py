@@ -48,17 +48,17 @@ class TDTask(BasicTask):
         if opt.dataset_name == "casia-webface" or opt.dataset_name == "scaf":
             train_dataset = TrainImageDataset(
                 opt.dataset_name, self.train_transform)
-            evaluation_dataset = EvaluationImageDataset(
-                opt.evaluation_dataset, self.evaluation_transform)
+            # evaluation_dataset = EvaluationImageDataset(
+            #     opt.evaluation_dataset, self.evaluation_transform)
             weights = None
             sampler = RandomSampler(train_dataset, batch_size=opt.batch_size,
                                     num_iter=opt.num_iter, restore_iter=opt.restore_iter, weights=weights)
             train_loader = torch.utils.data.DataLoader(train_dataset,
                                                        batch_size=opt.batch_size, sampler=sampler, pin_memory=True,
                                                        num_workers=opt.num_worker, drop_last=True)
-            evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset,
-                                                            batch_size=opt.eval_batch_size, pin_memory=True,
-                                                            num_workers=opt.num_worker)
+            # evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset,
+            #                                                 batch_size=opt.eval_batch_size, pin_memory=True,
+            #                                                 num_workers=opt.num_worker)
 
         elif opt.dataset_name == "lfw":
             # LFW dataset
@@ -86,12 +86,12 @@ class TDTask(BasicTask):
 
     def set_model(self):
         opt = self.opt
-        self.tdblock = MyViT((1, opt.image_size, opt.image_size), n_patches=8, n_blocks=2,
-                                  hidden_d=8, n_heads=2, out_d=len(self.prefetcher.__loader__.dataset.classes))
-        self.tdblock = convert_to_ddp(self.tdblock)
-        self.optimizer = torch.optim.SGD(list(self.tdblock.parameters()),
-                                         momentum=self.opt.momentum, lr=self.opt.learning_rate)
-        self.criterion = nn.CrossEntropyLoss()
+        # self.tdblock = MyViT((1, opt.image_size, opt.image_size), n_patches=8, n_blocks=2,
+        #                           hidden_d=8, n_heads=2, out_d=len(self.prefetcher.__loader__.dataset.classes))
+        # self.tdblock = convert_to_ddp(self.tdblock)
+        # self.optimizer = torch.optim.SGD(list(self.tdblock.parameters()),
+        #                                  momentum=self.opt.momentum, lr=self.opt.learning_rate)
+        # self.criterion = nn.CrossEntropyLoss()
 
     def adjust_learning_rate(self, step):
         assert step > 0, 'batch index should large than 0'
@@ -148,7 +148,7 @@ def get_positional_embeddings(sequence_length, d):
     return result
 
 class MyViT(nn.Module):
-    def __init__(self, chw, n_patches, n_blocks, hidden_d, n_heads, out_d) -> None:
+    def __init__(self, chw, n_patches, n_blocks, hidden_d, n_heads, out_d, age_group) -> None:
         super().__init__()
 
         self.chw = chw
@@ -178,6 +178,7 @@ class MyViT(nn.Module):
             nn.Linear(self.hidden_d, out_d),
             nn.Softmax(dim=-1)
         )
+        self.age_group_layer = nn.Linear(out_d, age_group)
 
     def forward(self, images):
         n, c, h, w = images.shape
@@ -197,11 +198,11 @@ class MyViT(nn.Module):
         # Getting the classification token only
         out = out[:, 0]
 
-        return self.mlp(out)
+        return self.mlp(out), self.age_group_layer(out)
 
 class MSA(nn.Module):
     def __init__(self, d, n_heads=2) -> None:
-        super(self.MSA, self).__init__()
+        super(MSA, self).__init__()
         self.d = d
         self.n_heads = n_heads
 
@@ -241,7 +242,7 @@ class MSA(nn.Module):
 
 class MyViTBlock(nn.Module):
     def __init__(self, hidden_d, n_heads, mlp_ratio=4) -> None:
-        super(self.MyViTBlock, self).__init__()
+        super(MyViTBlock, self).__init__()
         self.hidden_d = hidden_d
         self.n_heads = n_heads
 
