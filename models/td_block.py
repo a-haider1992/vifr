@@ -247,7 +247,7 @@ class MyViTBlock(nn.Module):
         self.n_heads = n_heads
 
         self.norm1 = nn.LayerNorm(hidden_d)
-        self.mhsa = self.MSA(hidden_d, n_heads)
+        self.mhsa = MSA(hidden_d, n_heads)
         self.norm2 = nn.LayerNorm(hidden_d)
         self.mlp = nn.Sequential(
             nn.Linear(hidden_d, mlp_ratio * hidden_d),
