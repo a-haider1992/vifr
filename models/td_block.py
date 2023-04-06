@@ -182,6 +182,9 @@ class MyViT(nn.Module):
 
     def forward(self, images):
         n, c, h, w = images.shape
+
+        self = self.cuda()
+        
         patches = patchify(images, self.n_patches)
         tokens = self.linear_mapper(patches)
         # Adding classification token to the tokens
@@ -190,8 +193,6 @@ class MyViT(nn.Module):
 
         # Adding positional embedding
         out = tokens + self.positional_embeddings.repeat(n, 1, 1)
-
-        out = out.cuda()
 
         # Transformer Blocks
         for block in self.blocks:
