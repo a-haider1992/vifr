@@ -207,7 +207,10 @@ class FR(BasicTask):
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
             ## If using VIT then feed images directly to estimation network
             if opt.td_block:
-                x_age, x_group = self.estimation_network(images)
+                ## Reshape images tensor to 3 channels other dimensions are auto
+                new_shape = [images.shape[0], 3, 91, 91]
+                reshaped_images = images.reshape(new_shape)
+                x_age, x_group = self.estimation_network(reshaped_images)
             else:
                 x_age, x_group = self.estimation_network(x_age)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
