@@ -208,7 +208,8 @@ class FR(BasicTask):
             ## If using VIT then feed images directly to estimation network
             if opt.td_block:
                 ## Reshape images tensor to 3 channels other dimensions are auto
-                new_shape = [images.shape[0], 3, 91, 91]
+                print(f"Images tensor:::{images.shape}")
+                new_shape = [images.shape[0], 3, opt.image_size, opt.image_size]
                 reshaped_images = images.reshape(new_shape)
                 x_age, x_group = self.estimation_network(reshaped_images)
             else:
