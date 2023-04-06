@@ -95,8 +95,8 @@ class FR(BasicTask):
 
         # if age estimation network to TD block VIT
         if opt.td_block:
-            estimation_network = ViT(image_size=opt.image_size, patch_size=16, num_classes=101,
-                                     hidden_features=8, num_heads=2, num_layers=2, age_group=opt.age_group, dropout=0.5)
+            estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
+                                     hidden_features=32, num_heads=2, num_layers=2, age_group=opt.age_group, dropout=0.5)
             # estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=2,
             #                       hidden_d=8, n_heads=2, out_d=101, age_group=opt.age_group)
         else:
@@ -205,15 +205,13 @@ class FR(BasicTask):
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
+
             ## If using VIT then feed images directly to estimation network
-            if opt.td_block:
-                ## Reshape images tensor to 3 channels other dimensions are auto
-                print(f"Images tensor:::{images.shape}")
-                new_shape = [images.shape[0], 3, opt.image_size, opt.image_size]
-                reshaped_images = images.reshape(new_shape)
-                x_age, x_group = self.estimation_network(reshaped_images)
-            else:
-                x_age, x_group = self.estimation_network(x_age)
+            # if opt.td_block:
+            #     x_age, x_group = self.estimation_network(images)
+            # else:
+
+            x_age, x_group = self.estimation_network(x_age)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
             da_loss = self.forward_da(x_id, ages)
             loss = id_loss + \
