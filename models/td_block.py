@@ -322,7 +322,7 @@ class ViT(nn.Module):
         # Classification head
         self.layer_norm = nn.LayerNorm(hidden_features)
         self.fc = nn.Linear(hidden_features, num_classes)
-        self.age_group = nn.Linear(hidden_features, age_group)
+        self.age_group = nn.Linear(num_classes, age_group)
         
     def forward(self, x):
         # Patch embedding
