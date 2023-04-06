@@ -95,7 +95,7 @@ class FR(BasicTask):
         
         ## if age estimation network to TD block VIT
         if opt.td_block:
-            estimation_network = MyViT((1, opt.image_size, opt.image_size), n_patches=8, n_blocks=2,
+            estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=2,
                                   hidden_d=8, n_heads=2, out_d=101, age_group=opt.age_group)
         else:
             estimation_network = AgeEstimationModule(
