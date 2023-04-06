@@ -191,6 +191,8 @@ class MyViT(nn.Module):
         # Adding positional embedding
         out = tokens + self.positional_embeddings.repeat(n, 1, 1)
 
+        out = out.cuda()
+
         # Transformer Blocks
         for block in self.blocks:
             out = block(out)
