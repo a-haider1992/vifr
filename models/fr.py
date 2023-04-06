@@ -9,7 +9,7 @@ from common.data_prefetcher import DataPrefetcher
 from common.ops import convert_to_ddp, get_dex_age, age2group, apply_weight_decay, reduce_loss
 from common.grl import GradientReverseLayer
 from . import BasicTask
-from .td_block import MyViT
+from .td_block import MyViT, ViT
 from backbone.aifr import backbone_dict, AgeEstimationModule
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
@@ -95,8 +95,10 @@ class FR(BasicTask):
 
         # if age estimation network to TD block VIT
         if opt.td_block:
-            estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=2,
-                                  hidden_d=8, n_heads=2, out_d=101, age_group=opt.age_group)
+            estimation_network = ViT(image_size=opt.image_size, patch_size=16, num_classes=101,
+                                     hidden_features=8, num_heads=2, num_layers=2, age_group=opt.age_group)
+            # estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=2,
+            #                       hidden_d=8, n_heads=2, out_d=101, age_group=opt.age_group)
         else:
             estimation_network = AgeEstimationModule(
                 input_size=opt.image_size, age_group=opt.age_group)

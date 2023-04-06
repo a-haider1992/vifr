@@ -182,9 +182,6 @@ class MyViT(nn.Module):
 
     def forward(self, images):
         n, c, h, w = images.shape
-
-        self = self.cuda()
-        
         patches = patchify(images, self.n_patches)
         tokens = self.linear_mapper(patches)
         # Adding classification token to the tokens
@@ -262,3 +259,88 @@ class MyViTBlock(nn.Module):
         out = x + self.mhsa(self.norm1(x))
         out = out + self.mlp(self.norm2(out))
         return out
+    
+
+## Chat GPT Implementation
+
+class MLP(nn.Module):
+    def __init__(self, in_features, hidden_features, out_features):
+        super().__init__()
+        self.fc1 = nn.Linear(in_features, hidden_features)
+        self.fc2 = nn.Linear(hidden_features, out_features)
+    
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+class ViTBlock(nn.Module):
+    def __init__(self, in_features, hidden_features, out_features, num_heads, dropout):
+        super().__init__()
+        self.layer_norm1 = nn.LayerNorm(in_features)
+        self.self_attention = nn.MultiheadAttention(in_features, num_heads, dropout=dropout)
+        self.dropout1 = nn.Dropout(dropout)
+        self.layer_norm2 = nn.LayerNorm(in_features)
+        self.mlp = MLP(in_features, hidden_features, out_features)
+        self.dropout2 = nn.Dropout(dropout)
+    
+    def forward(self, x):
+        # Multi-head attention
+        residual = x
+        x = self.layer_norm1(x)
+        x, _ = self.self_attention(x, x, x)
+        x = self.dropout1(x)
+        x += residual
+        
+        # MLP
+        residual = x
+        x = self.layer_norm2(x)
+        x = self.mlp(x)
+        x = self.dropout2(x)
+        x += residual
+        
+        return x
+
+class ViT(nn.Module):
+    def __init__(self, image_size, patch_size, num_classes, hidden_features, num_heads, num_layers, age_group, dropout):
+        super().__init__()
+        num_patches = (image_size // patch_size) ** 2
+        patch_dim = 3 * patch_size ** 2
+        
+        # Patch embedding
+        self.patch_embedding = nn.Conv2d(3, hidden_features, kernel_size=patch_size, stride=patch_size)
+        
+        # Positional embeddings
+        self.positional_embeddings = nn.Parameter(torch.randn(1, num_patches + 1, hidden_features))
+        
+        # Transformer layers
+        self.transformer_blocks = nn.ModuleList([
+            ViTBlock(hidden_features, hidden_features * 2, hidden_features, num_heads, dropout)
+            for _ in range(num_layers)
+        ])
+        
+        # Classification head
+        self.layer_norm = nn.LayerNorm(hidden_features)
+        self.fc = nn.Linear(hidden_features, num_classes)
+        self.age_group = nn.Linear(hidden_features, age_group)
+        
+    def forward(self, x):
+        # Patch embedding
+        x = self.patch_embedding(x)  # (B, C, H', W')
+        B, C, H, W = x.shape
+        x = x.view(B, C, H*W).transpose(1, 2)  # (B, N, C)
+        
+        # Add positional embeddings
+        x = torch.cat([x, self.positional_embeddings.repeat(B, 1, 1)], dim=1)
+        
+        # Transformer layers
+        for block in self.transformer_blocks:
+            x = block(x)
+        
+        # Classification head
+        x = x[:, 0, :]  # Use the [CLS] token
+        x = self.layer_norm(x)
+        x = self.fc(x)
+        
+        return x, self.age_group(x)
+
