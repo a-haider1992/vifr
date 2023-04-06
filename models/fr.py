@@ -92,11 +92,13 @@ class FR(BasicTask):
         backbone = backbone_dict[opt.backbone_name](input_size=opt.image_size)
         head = CosFace(in_features=512, out_features=len(self.prefetcher.__loader__.dataset.classes),
                        s=opt.head_s, m=opt.head_m)
-        
-        ## if age estimation network to TD block VIT
+
+        # if age estimation network to TD block VIT
         if opt.td_block:
             estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=2,
                                   hidden_d=8, n_heads=2, out_d=101, age_group=opt.age_group)
+            device = torch.device("cuda:0")  # Use the first GPU
+            estimation_network.to(device)
         else:
             estimation_network = AgeEstimationModule(
                 input_size=opt.image_size, age_group=opt.age_group)

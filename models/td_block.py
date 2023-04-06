@@ -254,8 +254,6 @@ class MyViTBlock(nn.Module):
             nn.GELU(),
             nn.Linear(mlp_ratio * hidden_d, hidden_d)
         )
-        ## To move the last layer to CUDA to resolve error `out` on GPU than CPU
-        self.mlp = nn.ModuleList(self.mlp)
 
     def forward(self, x):
         out = x + self.mhsa(self.norm1(x))
