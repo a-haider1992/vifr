@@ -25,36 +25,23 @@ class FR(BasicTask):
 
     def set_loader(self):
         opt = self.opt
-
-        self.train_transform = transforms.Compose(
-            [
-                transforms.RandomHorizontalFlip(),
-                transforms.Resize([opt.image_size, opt.image_size]),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
-            ])
-        self.evaluation_transform = transforms.Compose(
-            [
-                transforms.RandomHorizontalFlip(),
-                transforms.Resize([opt.image_size, opt.image_size]),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
-            ])
-        lfw_transform = transforms.Compose(
-            [
-                transforms.RandomHorizontalFlip(),
-                transforms.Resize([opt.image_size, opt.image_size]),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
-            ])
-        agedb_transform = transforms.Compose([
-            transforms.Resize((opt.image_size, opt.image_size)),
-            transforms.GaussianBlur(3),
-            transforms.Normalize(mean=[0.5, ], std=[0.5, ]),
-        ])
-
         if opt.dataset_name == "casia-webface" or opt.dataset_name == "scaf":
             print("Loading Casia-webface or SCAF dataset..")
+            self.train_transform = transforms.Compose(
+                [
+                    transforms.RandomHorizontalFlip(),
+                    transforms.Resize([opt.image_size, opt.image_size]),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=[0.5, ], std=[0.5, ])
+                ])
+            self.evaluation_transform = transforms.Compose(
+                [
+                    transforms.RandomHorizontalFlip(),
+                    transforms.Resize([opt.image_size, opt.image_size]),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=[0.5, ], std=[0.5, ])
+                ])
+
             train_dataset = TrainImageDataset(
                 opt.dataset_name, self.train_transform)
             evaluation_dataset = EvaluationImageDataset(
@@ -72,6 +59,14 @@ class FR(BasicTask):
         elif opt.dataset_name == "lfw":
             # LFW dataset
             print("Loading LFW dataset..")
+            lfw_transform = transforms.Compose(
+                [
+                    transforms.RandomHorizontalFlip(),
+                    transforms.Resize([opt.image_size, opt.image_size]),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=[0.5, ], std=[0.5, ])
+                ])
+
             torch.cuda.empty_cache()
             train_lfw_dataset = TrainingData('pairs.csv', lfw_transform)
             # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
@@ -86,6 +81,11 @@ class FR(BasicTask):
             #     test_lfw_dataset, num_workers=opt.num_worker)
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
             print("Loading AgeDB or UTK dataset..")
+            agedb_transform = transforms.Compose([
+                transforms.Resize((opt.image_size, opt.image_size)),
+                transforms.Normalize(mean=[0.5, ], std=[0.5, ]),
+            ])
+
             torch.cuda.empty_cache()
             age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
             weights = None
