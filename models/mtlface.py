@@ -198,6 +198,27 @@ class MTLFace(object):
             return True
         else:
             return False
+        
+    def evaluate_age_estimation(self):
+        opt=self.opt
+        torch.cuda.empty_cache()
+        print("Age Estimation Model under evaluation.")
+        self.fr.evaluation_transform.eval()
+        total_correct_pred = 0
+        total_incorrect_pred = 0
+        total_iter = int(opt.evaluation_num_iter)
+        with torch.no_grad():
+            for _ in range(0, total_iter):
+                image, age = self.fr.prefetcher.next()
+                predicted_age = self.fr.estimation_network(image)
+                if age==predicted_age:
+                    total_correct_pred += 1
+                else:
+                    total_incorrect_pred += 1
+            print("During evaluation, the model corectly predicts {} number of classes.".format(total_correct_pred))
+            print("During evaluation, the model incorrectly predicts {} number of classes.".format(total_incorrect_pred))
+            print("Model Accuracy:{}".format(total_correct_pred/(total_correct_pred+total_incorrect_pred)))
+
 
     def evaluate_mtlface(self):
         # evaluate trained model
