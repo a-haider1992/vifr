@@ -72,6 +72,7 @@ class FR(BasicTask):
         elif opt.dataset_name == "lfw":
             # LFW dataset
             print("Loading LFW dataset..")
+            torch.cuda.empty_cache()
             train_lfw_dataset = TrainingData('pairs.csv', lfw_transform)
             # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
             weights = None
@@ -85,6 +86,7 @@ class FR(BasicTask):
             #     test_lfw_dataset, num_workers=opt.num_worker)
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
             print("Loading AgeDB or UTK dataset..")
+            torch.cuda.empty_cache()
             age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
             weights = None
             sampler = RandomSampler(
