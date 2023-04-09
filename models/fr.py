@@ -55,6 +55,7 @@ class FR(BasicTask):
             ])
 
         if opt.dataset_name == "casia-webface" or opt.dataset_name == "scaf":
+            print("Loading Casia-webface or SCAF dataset..")
             train_dataset = TrainImageDataset(
                 opt.dataset_name, self.train_transform)
             evaluation_dataset = EvaluationImageDataset(
@@ -71,6 +72,7 @@ class FR(BasicTask):
 
         elif opt.dataset_name == "lfw":
             # LFW dataset
+            print("Loading LFW dataset..")
             train_lfw_dataset = TrainingData('pairs.csv', lfw_transform)
             # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
             weights = None
@@ -83,6 +85,7 @@ class FR(BasicTask):
             # evaluation_loader = torch.utils.data.DataLoader(
             #     test_lfw_dataset, num_workers=opt.num_worker)
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
+            print("Loading AgeDB or UTK dataset..")
             age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
             weights = None
             sampler = RandomSampler(
