@@ -37,11 +37,11 @@ class MTLFace(object):
         # self.td_task.set_loader()
         # self.td_task.set_model()
 
-        if opt.id_pretrained_path is not None and not opt.train_fas:
-            # self.fr.backbone.load_state_dict(
-            #     load_network(opt.id_pretrained_path))
-            self.fr.backbone.load_state_dict(
-                torch.load(opt.id_pretrained_path))
+        # if opt.id_pretrained_path is not None and not opt.train_fas:
+        #     # self.fr.backbone.load_state_dict(
+        #     #     load_network(opt.id_pretrained_path))
+        #     self.fr.backbone.load_state_dict(
+        #         torch.load(opt.id_pretrained_path))
         if opt.train_fas:
             if opt.id_pretrained_path is not None:
                 self.fr.backbone.load_state_dict(
@@ -203,14 +203,16 @@ class MTLFace(object):
         opt=self.opt
         torch.cuda.empty_cache()
         print("Age Estimation Model under evaluation.")
-        self.fr.evaluation_transform.eval()
+        self.fr.backbone.eval()
+        self.fr.estimation_network.eval()
         total_correct_pred = 0
         total_incorrect_pred = 0
         total_iter = int(opt.evaluation_num_iter)
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image, age = self.fr.prefetcher.next()
-                predicted_age = self.fr.estimation_network(image)
+                embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
+                predicted_age, predicted_group = self.fr.estimation_network(x_age)
                 if age==predicted_age:
                     total_correct_pred += 1
                 else:
