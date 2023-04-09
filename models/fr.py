@@ -47,12 +47,11 @@ class FR(BasicTask):
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
-        agedb_transform = transforms.Compose(
-            [
-                transforms.Resize([opt.image_size, opt.image_size]),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
-            ])
+        agedb_transform = transforms.Compose([
+            transforms.Resize((opt.image_size, opt.image_size)),
+            transforms.GaussianBlur(3),
+            transforms.Normalize(mean=[0.5, ], std=[0.5, ]),
+        ])
 
         if opt.dataset_name == "casia-webface" or opt.dataset_name == "scaf":
             print("Loading Casia-webface or SCAF dataset..")
@@ -222,7 +221,7 @@ class FR(BasicTask):
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
 
-            ## If using VIT then feed images directly to estimation network
+            # If using VIT then feed images directly to estimation network
             # if opt.td_block:
             #     x_age, x_group = self.estimation_network(images)
             # else:
