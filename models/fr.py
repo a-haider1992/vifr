@@ -77,14 +77,17 @@ class FR(BasicTask):
                                                        batch_size=opt.batch_size,
                                                        sampler=sampler_lfw, pin_memory=True, num_workers=opt.num_worker,
                                                        drop_last=True)
-            print(f"GPU memory allocated after loading data: {torch.cuda.memory_allocated()} bytes")
+            print(
+                f"GPU memory allocated after loading data: {torch.cuda.memory_allocated()} bytes")
             # evaluation_loader = torch.utils.data.DataLoader(
             #     test_lfw_dataset, num_workers=opt.num_worker)
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
             print("Loading AgeDB or UTK dataset..")
             agedb_transform = transforms.Compose([
-                transforms.Resize((opt.image_size, opt.image_size)),
-                transforms.Normalize(mean=[0.5, ], std=[0.5, ]),
+                transforms.RandomHorizontalFlip(),
+                transforms.Resize([opt.image_size, opt.image_size]),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
 
             torch.cuda.empty_cache()
@@ -96,7 +99,8 @@ class FR(BasicTask):
                                                        batch_size=opt.batch_size,
                                                        sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
                                                        drop_last=True)
-            print(f"GPU memory allocated after loading data: {torch.cuda.memory_allocated()} bytes")
+            print(
+                f"GPU memory allocated after loading data: {torch.cuda.memory_allocated()} bytes")
 
         else:
             return Exception("Database doesn't exist.")
