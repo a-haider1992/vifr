@@ -14,7 +14,7 @@ from backbone.aifr import backbone_dict, AgeEstimationModule
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
 from common.datasetV2 import TrainDataset, EvaluationDataset
-from common.datasetV3 import TrainingData, EvaluationData
+from common.datasetV3 import TrainingData, EvaluationData, AgeDB
 import pdb
 
 
@@ -76,8 +76,16 @@ class FR(BasicTask):
                                                        drop_last=True)
             # evaluation_loader = torch.utils.data.DataLoader(
             #     test_lfw_dataset, num_workers=opt.num_worker)
-        elif opt.dataset_name == "UTK":
-            pass
+        elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
+            age_db_dataset = AgeDB('AgeDB.csv', lfw_transform)
+            # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
+            weights = None
+            sampler = RandomSampler(
+                age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
+            train_loader = torch.utils.data.DataLoader(age_db_dataset,
+                                                       batch_size=opt.batch_size,
+                                                       sampler=sampler, num_workers=opt.num_worker,
+                                                       drop_last=True)
         else:
             return Exception("Database doesn't exist.")
 

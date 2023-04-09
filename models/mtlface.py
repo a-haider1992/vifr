@@ -33,9 +33,9 @@ class MTLFace(object):
         self.fr.set_model()
         ##
         # Set TD Task
-        self.td_task = TDTask(opt)
-        self.td_task.set_loader()
-        self.td_task.set_model()
+        # self.td_task = TDTask(opt)
+        # self.td_task.set_loader()
+        # self.td_task.set_model()
 
         if opt.id_pretrained_path is not None and not opt.train_fas:
             # self.fr.backbone.load_state_dict(
@@ -45,10 +45,10 @@ class MTLFace(object):
         if opt.train_fas:
             if opt.id_pretrained_path is not None:
                 self.fr.backbone.load_state_dict(
-                    load_network(opt.id_pretrained_path))
+                    torch.load(opt.id_pretrained_path))
             if opt.age_pretrained_path is not None:
                 self.fr.estimation_network.load_state_dict(
-                    load_network(opt.age_pretrained_path))
+                    torch.load(opt.age_pretrained_path))
             self.fas = FAS(opt)
             self.fas.set_loader()
             self.fas.set_model()

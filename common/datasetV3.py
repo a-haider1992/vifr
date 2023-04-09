@@ -64,3 +64,24 @@ class EvaluationData(LFWDataset):
     def __getitem__(self, index):
         return super().__getitem__(index)
     
+class AgeDB(tordata.Dataset):
+    def __init__(self, file, transform=None):
+        self.transform = transform
+        self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'AgeDB')
+        df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
+        self.paths = df['path'].to_list()
+        self.ages = df['age'].to_list()
+        self.images = []
+        self.classes = self.paths
+        for path in self.paths:
+            path = os.path.join(self.root, path)
+            self.images.append(path)
+        
+    def __getitem__(self, index):
+        image = pil_loader(self.images[index])
+        if self.transform is not None:
+            image = self.transform(image)
+        age = self.ages[index]
+        return image, age
+    def __len__(self):
+        return len(self.images)
