@@ -47,6 +47,12 @@ class FR(BasicTask):
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
+        agedb_transform = transforms.Compose(
+            [
+                transforms.Resize([opt.image_size, opt.image_size]),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
+            ])
 
         if opt.dataset_name == "casia-webface" or opt.dataset_name == "scaf":
             train_dataset = TrainImageDataset(
@@ -77,8 +83,7 @@ class FR(BasicTask):
             # evaluation_loader = torch.utils.data.DataLoader(
             #     test_lfw_dataset, num_workers=opt.num_worker)
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
-            age_db_dataset = TrainingDataAge('AgeDB.csv', lfw_transform)
-            # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
+            age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
             weights = None
             sampler = RandomSampler(
                 age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
