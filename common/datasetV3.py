@@ -85,3 +85,10 @@ class AgeDB(tordata.Dataset):
         return image, age
     def __len__(self):
         return len(self.images)
+
+class TrainingDataAge(AgeDB):
+    def __init__(self, file, transform):
+        super().__init__(file, transform)
+
+    def __getitem__(self, index):
+        return super().__getitem__(index)

@@ -14,7 +14,7 @@ from backbone.aifr import backbone_dict, AgeEstimationModule
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
 from common.datasetV2 import TrainDataset, EvaluationDataset
-from common.datasetV3 import TrainingData, EvaluationData, AgeDB
+from common.datasetV3 import TrainingData, EvaluationData, TrainingDataAge
 import pdb
 
 
@@ -77,7 +77,7 @@ class FR(BasicTask):
             # evaluation_loader = torch.utils.data.DataLoader(
             #     test_lfw_dataset, num_workers=opt.num_worker)
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
-            age_db_dataset = AgeDB('AgeDB.csv', lfw_transform)
+            age_db_dataset = TrainingDataAge('AgeDB.csv', lfw_transform)
             # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
             weights = None
             sampler = RandomSampler(
