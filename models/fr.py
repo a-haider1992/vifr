@@ -79,7 +79,7 @@ class FR(BasicTask):
                 train_lfw_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
             train_loader = torch.utils.data.DataLoader(train_lfw_dataset,
                                                        batch_size=opt.batch_size,
-                                                       sampler=sampler_lfw, num_workers=opt.num_worker,
+                                                       sampler=sampler_lfw, pin_memory=True, num_workers=opt.num_worker,
                                                        drop_last=True)
             # evaluation_loader = torch.utils.data.DataLoader(
             #     test_lfw_dataset, num_workers=opt.num_worker)
@@ -91,7 +91,7 @@ class FR(BasicTask):
                 age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
             train_loader = torch.utils.data.DataLoader(age_db_dataset,
                                                        batch_size=opt.batch_size,
-                                                       sampler=sampler, num_workers=opt.num_worker,
+                                                       sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
                                                        drop_last=True)
         else:
             return Exception("Database doesn't exist.")
