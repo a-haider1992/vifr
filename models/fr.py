@@ -44,7 +44,7 @@ class FR(BasicTask):
 
             train_dataset = TrainImageDataset(
                 opt.dataset_name, self.train_transform)
-            # age_db_dataset = TrainingDataAge('AgeDB.csv', self.evaluation_transform)
+            age_db_dataset = TrainingDataAge('AgeDB.csv', self.evaluation_transform)
             # evaluation_dataset = EvaluationImageDataset(
             #     opt.evaluation_dataset, self.evaluation_transform)
             weights = None
@@ -53,9 +53,9 @@ class FR(BasicTask):
             train_loader = torch.utils.data.DataLoader(train_dataset,
                                                        batch_size=opt.batch_size, sampler=sampler, pin_memory=True,
                                                        num_workers=opt.num_worker, drop_last=True)
-            # evaluation_loader = torch.utils.data.DataLoader(age_db_dataset,
-            #                                                 batch_size=opt.eval_batch_size, pin_memory=True,
-            #                                                 num_workers=opt.num_worker)
+            evaluation_loader = torch.utils.data.DataLoader(age_db_dataset,
+                                                            batch_size=opt.eval_batch_size, pin_memory=True,
+                                                            num_workers=opt.num_worker)
 
         elif opt.dataset_name == "lfw":
             # LFW dataset
@@ -110,7 +110,7 @@ class FR(BasicTask):
         self.prefetcher = DataPrefetcher(train_loader)
 
         # # Evaluation prefetcher
-        # self.eval_prefetcher = DataPrefetcher(evaluation_loader)
+        self.eval_prefetcher = DataPrefetcher(evaluation_loader)
 
     def set_model(self):
         opt = self.opt

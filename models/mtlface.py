@@ -31,16 +31,11 @@ class MTLFace(object):
         self.fr = FR(opt)
         self.fr.set_loader()
         self.fr.set_model()
-        # if opt.id_pretrained_path is not None and not opt.train_fas:
-        #     # self.fr.backbone.load_state_dict(
-        #     #     load_network(opt.id_pretrained_path))
-        #     self.fr.backbone.load_state_dict(
-        #         torch.load(opt.id_pretrained_path))
         if opt.train_fas:
-            if opt.id_pretrained_path is not None:
+            if opt.id_pretrained_path is not None and dist.get_rank() == 0:
                 self.fr.backbone.load_state_dict(
                     torch.load(opt.id_pretrained_path))
-            if opt.age_pretrained_path is not None:
+            if opt.age_pretrained_path is not None and dist.get_rank() == 0:
                 self.fr.estimation_network.load_state_dict(
                     torch.load(opt.age_pretrained_path))
             self.fas = FAS(opt)
@@ -183,7 +178,7 @@ class MTLFace(object):
             PATH_BACKBONE = os.path.join(root, 'backbone.pt')
             PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model.pt')
             torch.save(self.fr.backbone.state_dict(), PATH_BACKBONE)
-            torch.save(self.fr.estimation_network.module.state_dict(), PATH_AGE_ESTIMATION)
+            torch.save(self.fr.estimation_network.state_dict(), PATH_AGE_ESTIMATION)
 
     def isSame(self, embed1, embed2):
         result = torch.eq(embed1, embed2)
@@ -204,7 +199,7 @@ class MTLFace(object):
         total_iter = int(opt.evaluation_num_iter)
         with torch.no_grad():
             for _ in range(0, total_iter):
-                image, age = self.fr.prefetcher.next()
+                image, age = self.fr.eval_prefetcher.next()
                 embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
                 predicted_age, predicted_group = self.fr.estimation_network(x_age)
                 if age==predicted_age:
