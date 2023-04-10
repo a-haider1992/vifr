@@ -204,7 +204,7 @@ class MTLFace(object):
         total_iter = int(opt.evaluation_num_iter)
         with torch.no_grad():
             for _ in range(0, total_iter):
-                image, age = self.fr.prefetcher.next()
+                image, age = self.fr.eval_prefetcher.next()
                 embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
                 predicted_age, predicted_group = self.fr.estimation_network(x_age)
                 if age==predicted_age:
