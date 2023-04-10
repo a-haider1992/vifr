@@ -5,123 +5,22 @@
 
 import numpy as np
 import torch
-from torchvision import transforms
 import torch.nn as nn
+import torch.nn.functional as F
+from torchvision import transforms
+
+from common.data_prefetcher import DataPrefetcher
+from common.dataset import EvaluationImageDataset, TrainImageDataset
+from common.datasetV2 import EvaluationDataset, TrainDataset
+from common.datasetV3 import EvaluationData, TrainingData
+from common.ops import convert_to_ddp
+from common.sampler import RandomSampler
+
 from . import BasicTask
 
-import torch.nn.functional as F
-from common.ops import convert_to_ddp
 
-from common.sampler import RandomSampler
-from common.data_prefetcher import DataPrefetcher
-from common.dataset import TrainImageDataset, EvaluationImageDataset
-from common.datasetV2 import TrainDataset, EvaluationDataset
-from common.datasetV3 import TrainingData, EvaluationData
-
-
-class TDTask(BasicTask):
-
-    def set_loader(self):
-        opt = self.opt
-        # 1-100 Age labels
-        self.train_transform = transforms.Compose(
-            [
-                transforms.RandomHorizontalFlip(),
-                transforms.Resize([opt.image_size, opt.image_size]),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
-            ])
-        self.evaluation_transform = transforms.Compose(
-            [
-                transforms.RandomHorizontalFlip(),
-                transforms.Resize([opt.image_size, opt.image_size]),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
-            ])
-        lfw_transform = transforms.Compose(
-            [
-                transforms.RandomHorizontalFlip(),
-                transforms.Resize([opt.image_size, opt.image_size]),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5, ], std=[0.5, ])
-            ])
-        if opt.dataset_name == "casia-webface" or opt.dataset_name == "scaf":
-            train_dataset = TrainImageDataset(
-                opt.dataset_name, self.train_transform)
-            # evaluation_dataset = EvaluationImageDataset(
-            #     opt.evaluation_dataset, self.evaluation_transform)
-            weights = None
-            sampler = RandomSampler(train_dataset, batch_size=opt.batch_size,
-                                    num_iter=opt.num_iter, restore_iter=opt.restore_iter, weights=weights)
-            train_loader = torch.utils.data.DataLoader(train_dataset,
-                                                       batch_size=opt.batch_size, sampler=sampler, pin_memory=True,
-                                                       num_workers=opt.num_worker, drop_last=True)
-            # evaluation_loader = torch.utils.data.DataLoader(evaluation_dataset,
-            #                                                 batch_size=opt.eval_batch_size, pin_memory=True,
-            #                                                 num_workers=opt.num_worker)
-
-        elif opt.dataset_name == "lfw":
-            # LFW dataset
-            train_lfw_dataset = TrainingData('pairs.csv', lfw_transform)
-            # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
-            weights = None
-            sampler_lfw = RandomSampler(
-                train_lfw_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
-            train_loader = torch.utils.data.DataLoader(train_lfw_dataset,
-                                                       batch_size=opt.batch_size,
-                                                       sampler=sampler_lfw, num_workers=opt.num_worker,
-                                                       drop_last=True)
-            # evaluation_loader = torch.utils.data.DataLoader(
-            #     test_lfw_dataset, num_workers=opt.num_worker)
-        elif opt.dataset_name == "UTK":
-            pass
-        else:
-            return Exception("Database doesn't exist.")
-
-        # Train Prefetcher
-        self.prefetcher = DataPrefetcher(train_loader)
-
-        # # Evaluation prefetcher
-        # self.eval_prefetcher = DataPrefetcher(evaluation_loader)
-
-    def set_model(self):
-        opt = self.opt
-        # self.tdblock = MyViT((1, opt.image_size, opt.image_size), n_patches=8, n_blocks=2,
-        #                           hidden_d=8, n_heads=2, out_d=len(self.prefetcher.__loader__.dataset.classes))
-        # self.tdblock = convert_to_ddp(self.tdblock)
-        # self.optimizer = torch.optim.SGD(list(self.tdblock.parameters()),
-        #                                  momentum=self.opt.momentum, lr=self.opt.learning_rate)
-        # self.criterion = nn.CrossEntropyLoss()
-
-    def adjust_learning_rate(self, step):
-        assert step > 0, 'batch index should large than 0'
-        opt = self.opt
-        if step > opt.warmup:
-            lr = opt.learning_rate * \
-                (opt.gamma ** np.sum(np.array(opt.milestone) < step))
-        else:
-            lr = step * opt.learning_rate / opt.warmup
-        lr = max(1e-4, lr)
-        for param_group in self.optimizer.param_groups:
-            param_group['lr'] = lr
-
-    def validate(self, n_iter):
-        pass
-
-    def train(self, inputs, n_iter):
-        opt = self.opt
-        self.tdblock.train()
-        images, labels, ages, genders = inputs
-        age_loss = self.criterion(self.tdblock(images), ages)
-        self.optimizer.zero_grad()
-        age_loss.backward()
-        self.optimizer.step()
-        # apply_weight_decay(self.tdblock,
-        #                    weight_decay_factor=opt.weight_decay, wo_bn=True)
-        # id_loss = reduce_loss(id_loss)
-        self.adjust_learning_rate(n_iter)
-        lr = self.optimizer.param_groups[0]['lr']
-        self.logger.msg([age_loss, lr], n_iter)
+class TDTask():
+    pass
 
 def patchify(images, n_patches):
     n, c, w, h = images.shape

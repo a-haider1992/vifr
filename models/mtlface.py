@@ -31,12 +31,6 @@ class MTLFace(object):
         self.fr = FR(opt)
         self.fr.set_loader()
         self.fr.set_model()
-        ##
-        # Set TD Task
-        # self.td_task = TDTask(opt)
-        # self.td_task.set_loader()
-        # self.td_task.set_model()
-
         # if opt.id_pretrained_path is not None and not opt.train_fas:
         #     # self.fr.backbone.load_state_dict(
         #     #     load_network(opt.id_pretrained_path))
@@ -46,7 +40,7 @@ class MTLFace(object):
             if opt.id_pretrained_path is not None:
                 self.fr.backbone.load_state_dict(
                     torch.load(opt.id_pretrained_path))
-            if opt.age_pretrained_path is not None:
+            if opt.age_pretrained_path is not None and dist.get_rank() == 0:
                 self.fr.estimation_network.load_state_dict(
                     torch.load(opt.age_pretrained_path))
             self.fas = FAS(opt)
@@ -184,7 +178,7 @@ class MTLFace(object):
 
     def save_model(self):
         opt = self.opt
-        if opt.id_pretrained_path is None and dist.get_rank() == 0:
+        if dist.get_rank() == 0:
             root = os.path.dirname(__file__)
             PATH_BACKBONE = os.path.join(root, 'backbone.pt')
             PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model.pt')
