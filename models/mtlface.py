@@ -183,7 +183,7 @@ class MTLFace(object):
             PATH_BACKBONE = os.path.join(root, 'backbone.pt')
             PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model.pt')
             torch.save(self.fr.backbone.state_dict(), PATH_BACKBONE)
-            torch.save(self.fr.estimation_network.state_dict(), PATH_AGE_ESTIMATION)
+            torch.save(self.fr.estimation_network.module.state_dict(), PATH_AGE_ESTIMATION)
 
     def isSame(self, embed1, embed2):
         result = torch.eq(embed1, embed2)
