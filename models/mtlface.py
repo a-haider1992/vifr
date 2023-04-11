@@ -205,7 +205,7 @@ class MTLFace(object):
                 predicted_age, predicted_group = self.fr.estimation_network(x_age)
                 print("The correct age tensor shape is : {}".format(age.shape))
                 print("The predicted age tensor shape is : {}".format(predicted_age.shape))
-                if age==torch.argmax(predicted_age).item():
+                if age.item()==torch.argmax(predicted_age).item():
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred += 1
