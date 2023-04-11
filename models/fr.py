@@ -157,7 +157,7 @@ class FR(BasicTask):
             backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
                                                                               da_discriminator)
         else:
-            backbone = convert_to_ddp(backbone)
+            backbone, head, da_discriminator = convert_to_ddp(backbone, head, da_discriminator)
         # with open('VIT_keys_after_ddp.txt', 'w') as f:
         #         for key in estimation_network.state_dict().keys():
         #             f.write(key + '\n')
