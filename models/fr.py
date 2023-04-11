@@ -123,8 +123,8 @@ class FR(BasicTask):
             estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
                                      hidden_features=32, num_heads=2, num_layers=2, age_group=opt.age_group, dropout=0.5)
             with open('VIT_keys.txt', 'w') as f:
-                for key, value in estimation_network.state_dict().items():
-                    f.write(key + ': ' + str(value) + '\n')
+                for key in estimation_network.state_dict().keys():
+                    f.write(key + '\n')
             # estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=2,
             #                       hidden_d=8, n_heads=2, out_d=101, age_group=opt.age_group)
         else:
@@ -151,6 +151,9 @@ class FR(BasicTask):
                                         momentum=opt.momentum, lr=opt.learning_rate)
         backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
                                                                               da_discriminator)
+        with open('VIT_keys_after_ddp.txt', 'w') as f:
+                for key in estimation_network.state_dict().keys():
+                    f.write(key + '\n')
         scaler = amp.GradScaler()
         self.optimizer = optimizer
         self.backbone = backbone
