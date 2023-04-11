@@ -110,7 +110,7 @@ class FR(BasicTask):
         self.prefetcher = DataPrefetcher(train_loader)
 
         # # Evaluation prefetcher
-        self.eval_prefetcher = DataPrefetcher(evaluation_loader)
+        # self.eval_prefetcher = DataPrefetcher(evaluation_loader)
 
     def set_model(self):
         opt = self.opt
