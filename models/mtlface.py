@@ -4,7 +4,7 @@ import tqdm
 from .fr import FR
 from .fas import FAS
 from .td_block import TDTask
-from common.ops import load_network
+from common.ops import load_network, load_network_1
 import os.path as osp
 import os, torch
 import torch.nn.functional as F
@@ -37,7 +37,7 @@ class MTLFace(object):
                     torch.load(opt.id_pretrained_path))
             if opt.age_pretrained_path is not None and dist.get_rank() == 0:
                 self.fr.estimation_network.load_state_dict(
-                    torch.load(opt.age_pretrained_path))
+                    load_network_1(opt.age_pretrained_path))
             if not opt.evaluation_only:
                 self.fas = FAS(opt)
                 self.fas.set_loader()

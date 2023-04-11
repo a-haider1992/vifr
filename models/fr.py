@@ -153,11 +153,9 @@ class FR(BasicTask):
                                         list(estimation_network.parameters()) +
                                         list(da_discriminator.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
-        if not opt.evaluation_only:
-            backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
+        # if not opt.evaluation_only:
+        backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
                                                                               da_discriminator)
-        else:
-            backbone, head, da_discriminator = convert_to_ddp(backbone, head, da_discriminator)
         # with open('VIT_keys_after_ddp.txt', 'w') as f:
         #         for key in estimation_network.state_dict().keys():
         #             f.write(key + '\n')
