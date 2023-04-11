@@ -6,7 +6,8 @@ from .fas import FAS
 from .td_block import TDTask
 from common.ops import load_network, load_network_1
 import os.path as osp
-import os, torch
+import os
+import torch
 import torch.nn.functional as F
 import torch.distributed as dist
 
@@ -112,7 +113,7 @@ class MTLFace(object):
         parser.add_argument("--td_block", help='Use VIT', action='store_true')
 
         # GENERAL FACE RECOGNITION
-        parser.add_argument("--gfr", help='general face recognition without age', 
+        parser.add_argument("--gfr", help='general face recognition without age',
                             action='store_true')
 
         # TESTING
@@ -122,7 +123,8 @@ class MTLFace(object):
                             help='Number of evaluation epochs', default=5, type=int)
         parser.add_argument("--eval_batch_size",
                             help='Batch size of evaluation', default=1, type=int)
-        parser.add_argument("--evaluation_only", help='Evaluate the trained models', action='store_true')
+        parser.add_argument(
+            "--evaluation_only", help='Evaluate the trained models', action='store_true')
 
         # FAS
         parser.add_argument("--d_lr", help='learning-rate',
@@ -179,7 +181,8 @@ class MTLFace(object):
             PATH_BACKBONE = os.path.join(root, 'backbone.pt')
             PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model.pt')
             torch.save(self.fr.backbone.state_dict(), PATH_BACKBONE)
-            torch.save(self.fr.estimation_network.state_dict(), PATH_AGE_ESTIMATION)
+            torch.save(self.fr.estimation_network.state_dict(),
+                       PATH_AGE_ESTIMATION)
 
     def isSame(self, embed1, embed2):
         result = torch.eq(embed1, embed2)
@@ -188,9 +191,9 @@ class MTLFace(object):
             return True
         else:
             return False
-        
+
     def evaluate_age_estimation(self):
-        opt=self.opt
+        opt = self.opt
         torch.cuda.empty_cache()
         print("Age Estimation Model under evaluation.")
         self.fr.backbone.eval()
@@ -201,18 +204,24 @@ class MTLFace(object):
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image, age = self.fr.prefetcher.next()
-                embedding, x_id, x_age = self.fr.backbone(image, return_age=True)
-                predicted_age, predicted_group = self.fr.estimation_network(x_age)
-                print("The correct age tensor shape is : {}".format(age.shape))
-                print("The predicted age tensor shape is : {}".format(predicted_age.shape))
-                if age.item()==torch.argmax(predicted_age).item():
+                embedding, x_id, x_age = self.fr.backbone(
+                    image, return_age=True)
+                predicted_age, predicted_group = self.fr.estimation_network(
+                    x_age)
+                # print("The correct age tensor shape is : {}".format(age.shape))
+                # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
+                if age.item() == torch.argmax(predicted_age).item():
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred += 1
-            print("During evaluation, the model corectly predicts {} number of classes.".format(total_correct_pred))
-            print("During evaluation, the model incorrectly predicts {} number of classes.".format(total_incorrect_pred))
-            print("Model Accuracy:{}".format(total_correct_pred/(total_correct_pred+total_incorrect_pred)))
-
+                    print("The correct age is : {}".format(age.item()))
+                    print("The predicted age is : {}".format(torch.argmax(predicted_age).item()))
+            print("During evaluation, the model corectly predicts {} number of classes.".format(
+                total_correct_pred))
+            print("During evaluation, the model incorrectly predicts {} number of classes.".format(
+                total_incorrect_pred))
+            print("Model Accuracy:{}".format(total_correct_pred /
+                  (total_correct_pred+total_incorrect_pred)))
 
     def evaluate_mtlface(self):
         # evaluate trained model
@@ -229,7 +238,7 @@ class MTLFace(object):
         total_correct_pred = 0
         total_incorrect_pred = 0
         total_iter = int(opt.evaluation_num_iter)
-        ## Test on LFW
+        # Test on LFW
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image1, image2 = self.fr.prefetcher.next()
@@ -241,9 +250,12 @@ class MTLFace(object):
                     total_incorrect_pred += 1
                     # print(embedding1)
                     # print(embedding2)
-            print("During evaluation, the model corectly predicts {} number of classes.".format(total_correct_pred))
-            print("During evaluation, the model incorrectly predicts {} number of classes.".format(total_incorrect_pred))
-            print("Model Accuracy:{}".format(total_correct_pred/(total_correct_pred+total_incorrect_pred)))
+            print("During evaluation, the model corectly predicts {} number of classes.".format(
+                total_correct_pred))
+            print("During evaluation, the model incorrectly predicts {} number of classes.".format(
+                total_incorrect_pred))
+            print("Model Accuracy:{}".format(total_correct_pred /
+                  (total_correct_pred+total_incorrect_pred)))
         # with torch.no_grad():
         #     for _ in range(0, total_iter):
         #         image, label = self.fr.eval_prefetcher.next()
