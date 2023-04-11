@@ -36,6 +36,9 @@ class MTLFace(object):
                 self.fr.backbone.load_state_dict(
                     torch.load(opt.id_pretrained_path))
             if opt.age_pretrained_path is not None and dist.get_rank() == 0:
+                with open('loaded_VIT_keys.txt', 'w') as f:
+                    for key in torch.load(opt.age_pretrained_path).keys():
+                        f.write(key + '\n')
                 self.fr.estimation_network.load_state_dict(
                     torch.load(opt.age_pretrained_path))
             self.fas = FAS(opt)
