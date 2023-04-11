@@ -125,6 +125,10 @@ class FR(BasicTask):
             with open('VIT_keys.txt', 'w') as f:
                 for key in estimation_network.state_dict().keys():
                     f.write(key + '\n')
+            with open('backbone_keys.txt', 'w') as f:
+                for key in backbone.state_dict().keys():
+                    f.write(key + '\n')
+            
             # estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=2,
             #                       hidden_d=8, n_heads=2, out_d=101, age_group=opt.age_group)
         else:
@@ -149,7 +153,8 @@ class FR(BasicTask):
                                         list(estimation_network.parameters()) +
                                         list(da_discriminator.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
-        backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
+        if not opt.evaluation_only:
+            backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
                                                                               da_discriminator)
         with open('VIT_keys_after_ddp.txt', 'w') as f:
                 for key in estimation_network.state_dict().keys():
