@@ -69,6 +69,17 @@ def load_network(state_dict):
         new_state_dict[namekey] = v
     return new_state_dict
 
+def load_network_1(state_dict):
+    if isinstance(state_dict, str):
+        state_dict = torch.load(state_dict, map_location='cpu')
+    # create new OrderedDict that does not contain `module.`
+    from collections import OrderedDict
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        namekey = 'module.'+ k # Add module to each key
+        new_state_dict[namekey] = v
+    return new_state_dict
+
 
 class LoggerX(object):
 
