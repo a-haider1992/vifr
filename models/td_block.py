@@ -207,7 +207,7 @@ class ViT(nn.Module):
         patch_dim = 3 * patch_size ** 2
         
         # Patch embedding
-        self.patch_embedding = nn.Conv2d(3, hidden_features, kernel_size=patch_size, stride=patch_size)
+        self.patch_embedding = nn.Conv2d(512, hidden_features, kernel_size=patch_size, stride=patch_size)
         
         # Positional embeddings
         self.positional_embeddings = nn.Parameter(torch.randn(1, num_patches + 1, hidden_features))
