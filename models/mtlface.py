@@ -38,7 +38,7 @@ class MTLFace(object):
                     torch.load(opt.id_pretrained_path))
             if opt.age_pretrained_path is not None and dist.get_rank() == 0:
                 self.fr.estimation_network.load_state_dict(
-                    load_network_1(opt.age_pretrained_path))
+                    torch.load(opt.age_pretrained_path))
             if not opt.evaluation_only:
                 self.fas = FAS(opt)
                 self.fas.set_loader()
