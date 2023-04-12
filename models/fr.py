@@ -120,10 +120,10 @@ class FR(BasicTask):
 
         # if age estimation network to TD block VIT
         if opt.td_block:
-            # estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
-            #                          hidden_features=32, 
-            #                          num_heads=2, num_layers=2, age_group=opt.age_group, dropout=0.5)
-            estimation_network = PreTrainedVIT(image_size=opt.image_size)
+            estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
+                                     hidden_features=32, 
+                                     num_heads=2, num_layers=2, age_group=opt.age_group, dropout=0.5)
+            # estimation_network = PreTrainedVIT(image_size=opt.image_size)
             optimizer_new = torch.optim.Adam(list(backbone.parameters()) +
                                         list(head.parameters()) +
                                         list(estimation_network.parameters()),
@@ -252,7 +252,7 @@ class FR(BasicTask):
             # If using VIT then feed images directly to estimation network
             # if opt.td_block:
 
-            x_age = self.estimation_network(images)
+            x_age, age_group = self.estimation_network(images)
             age_loss = F.mse_loss(x_age, ages)
             loss = id_loss + age_loss
 
