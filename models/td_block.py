@@ -241,7 +241,7 @@ class ViT(nn.Module):
         x = self.layer_norm(x)
         x = self.fc(x)
         
-        return x, self.age_group(x)
+        return x.squeeze(), self.age_group(x)
 
 # class PreTrainedVIT():
 #     # A pre-trained VIT model can improve the age estimation accuracy
