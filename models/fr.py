@@ -253,6 +253,8 @@ class FR(BasicTask):
             # if opt.td_block:
 
             x_age, age_group = self.estimation_network(images)
+            print("The size predicted age tensor is {}".format(x_age.shape))
+            print("The size of actual age tensor is {}".format(ages.shape))
             age_loss = F.mse_loss(x_age, ages)
             loss = id_loss + age_loss
 
