@@ -240,8 +240,10 @@ class ViT(nn.Module):
         x = x[:, 0, :]  # Use the [CLS] token
         x = self.layer_norm(x)
         x = self.fc(x)
+
+        age = torch.max(x, dim=1)
         
-        return x.squeeze(), self.age_group(x)
+        return age, self.age_group(x)
 
 # class PreTrainedVIT():
 #     # A pre-trained VIT model can improve the age estimation accuracy
