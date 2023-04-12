@@ -255,6 +255,8 @@ class FR(BasicTask):
             x_age, age_group = self.estimation_network(images)
             print("The size predicted age tensor is {}".format(x_age.shape))
             print("The size of actual age tensor is {}".format(ages.shape))
+            x_age = torch.max(x_age, dim=1)
+            print("The size predicted age tensor after is {}".format(x_age.shape))
             age_loss = F.mse_loss(x_age, ages)
             loss = id_loss + age_loss
 
