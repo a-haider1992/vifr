@@ -18,7 +18,7 @@ from common.sampler import RandomSampler
 
 from . import BasicTask
 
-from torchvision.models import vit
+from torchvision.models import vit_l_32
 
 
 class TDTask():
@@ -248,7 +248,7 @@ class ViT(nn.Module):
 class PreTrainedVIT():
     # A pre-trained VIT model can improve the age estimation accuracy
     def __init__(self, image_size) -> None:
-        model = vit.vit_base_patch16_224(pretrained=True, image_size=image_size)
+        model = vit_l_32(pretrained=True, image_size=image_size)
         num_age_classes = 101 # The number of age classes you want to predict
         model.age_layer = nn.Linear(in_features=model.fc.in_features, out_features=num_age_classes)
         # model.age_group_layer = nn.Linear(num_age_classes, age_group)
