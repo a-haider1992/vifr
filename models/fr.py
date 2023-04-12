@@ -9,7 +9,7 @@ from common.data_prefetcher import DataPrefetcher
 from common.ops import convert_to_ddp, get_dex_age, age2group, apply_weight_decay, reduce_loss
 from common.grl import GradientReverseLayer
 from . import BasicTask
-from .td_block import MyViT, ViT, PreTrainedVIT
+from .td_block import ViT
 from backbone.aifr import backbone_dict, AgeEstimationModule
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
