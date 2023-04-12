@@ -252,19 +252,18 @@ class FR(BasicTask):
             # If using VIT then feed images directly to estimation network
             # if opt.td_block:
 
-            x_age, age_group = self.estimation_network(images)
-            age_loss = F.mse_loss(get_dex_age(x_age), ages)
-            loss = id_loss + age_loss
+            x_age, x_group = self.estimation_network(images)
+            
 
             # x_age, x_group = self.estimation_network(x_age)
-            # age_loss = self.compute_age_loss(x_age, x_group, ages)
+            age_loss = self.compute_age_loss(x_age, x_group, ages)
             # da_loss = self.forward_da(x_id, ages)
             # loss = id_loss + \
             #     age_loss * opt.fr_age_loss_weight + \
             #     da_loss * opt.fr_da_loss_weight
 
 
-
+            loss = id_loss + age_loss
             total_loss = loss
 
 
