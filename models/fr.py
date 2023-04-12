@@ -9,7 +9,7 @@ from common.data_prefetcher import DataPrefetcher
 from common.ops import convert_to_ddp, get_dex_age, age2group, apply_weight_decay, reduce_loss
 from common.grl import GradientReverseLayer
 from . import BasicTask
-from .td_block import MyViT, ViT
+from .td_block import MyViT, ViT, PreTrainedVIT
 from backbone.aifr import backbone_dict, AgeEstimationModule
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
@@ -120,9 +120,15 @@ class FR(BasicTask):
 
         # if age estimation network to TD block VIT
         if opt.td_block:
-            estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
-                                     hidden_features=32, num_heads=2, num_layers=2, age_group=opt.age_group, dropout=0.5)
-            # with open('VIT_keys.txt', 'w') as f:
+            # estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
+            #                          hidden_features=32, 
+            #                          num_heads=2, num_layers=2, age_group=opt.age_group, dropout=0.5)
+            estimation_network = PreTrainedVIT(image_size=opt.image_size)
+            optimizer_new = torch.optim.Adam(list(backbone.parameters()) +
+                                        list(head.parameters()) +
+                                        list(estimation_network.parameters()),
+                                        momentum=opt.momentum, lr=opt.learning_rate)
+           # with open('VIT_keys.txt', 'w') as f:
             #     for key in estimation_network.state_dict().keys():
             #         f.write(key + '\n')
             # with open('backbone_keys.txt', 'w') as f:
@@ -160,7 +166,8 @@ class FR(BasicTask):
         #         for key in estimation_network.state_dict().keys():
         #             f.write(key + '\n')
         scaler = amp.GradScaler()
-        self.optimizer = optimizer
+        # self.optimizer = optimizer
+        self.optimizer = optimizer_new
         self.backbone = backbone
         self.head = head
         self.estimation_network = estimation_network
@@ -244,17 +251,23 @@ class FR(BasicTask):
 
             # If using VIT then feed images directly to estimation network
             # if opt.td_block:
-            #     x_age, x_group = self.estimation_network(images)
-            # else:
 
-            x_age, x_group = self.estimation_network(x_age)
-            age_loss = self.compute_age_loss(x_age, x_group, ages)
-            da_loss = self.forward_da(x_id, ages)
-            loss = id_loss + \
-                age_loss * opt.fr_age_loss_weight + \
-                da_loss * opt.fr_da_loss_weight
+            x_age = self.estimation_network(images)
+            age_loss = F.mse_loss(x_age, ages)
+            loss = id_loss + age_loss
+
+            # x_age, x_group = self.estimation_network(x_age)
+            # age_loss = self.compute_age_loss(x_age, x_group, ages)
+            # da_loss = self.forward_da(x_id, ages)
+            # loss = id_loss + \
+            #     age_loss * opt.fr_age_loss_weight + \
+            #     da_loss * opt.fr_da_loss_weight
+
+
 
             total_loss = loss
+
+
             if opt.amp:
                 total_loss = self.scaler.scale(loss)
             self.optimizer.zero_grad()
@@ -267,8 +280,15 @@ class FR(BasicTask):
             else:
                 self.optimizer.step()
 
-            id_loss, da_loss, age_loss = reduce_loss(
-                id_loss, da_loss, age_loss)
+            # id_loss, da_loss, age_loss = reduce_loss(
+            #     id_loss, da_loss, age_loss)
+            # self.adjust_learning_rate(n_iter)
+            # lr = self.optimizer.param_groups[0]['lr']
+            # self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
+
+            id_loss,  age_loss = reduce_loss(
+                id_loss, age_loss)
             self.adjust_learning_rate(n_iter)
             lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
+            self.logger.msg([id_loss, age_loss, lr], n_iter)
+
