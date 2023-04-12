@@ -127,7 +127,7 @@ class FR(BasicTask):
             optimizer_new = torch.optim.Adam(list(backbone.parameters()) +
                                         list(head.parameters()) +
                                         list(estimation_network.parameters()),
-                                        momentum=opt.momentum, lr=opt.learning_rate)
+                                        lr=opt.learning_rate, betas=(opt.momentum, 0.999))
            # with open('VIT_keys.txt', 'w') as f:
             #     for key in estimation_network.state_dict().keys():
             #         f.write(key + '\n')
