@@ -174,34 +174,30 @@ class MLP(nn.Module):
         return x
 
 class ViTBlock(nn.Module):
-    def __init__(self, in_features, hidden_features, out_features, num_heads, dropout):
+    def __init__(self, in_features, hidden_features, out_features, num_heads):
         super().__init__()
         self.layer_norm1 = nn.LayerNorm(in_features)
-        self.self_attention = nn.MultiheadAttention(in_features, num_heads, dropout=dropout)
-        self.dropout1 = nn.Dropout(dropout)
+        self.self_attention = nn.MultiheadAttention(in_features, num_heads)
         self.layer_norm2 = nn.LayerNorm(in_features)
         self.mlp = MLP(in_features, hidden_features, out_features)
-        self.dropout2 = nn.Dropout(dropout)
     
     def forward(self, x):
         # Multi-head attention
         residual = x
         x = self.layer_norm1(x)
         x, _ = self.self_attention(x, x, x)
-        x = self.dropout1(x)
         x += residual
         
         # MLP
         residual = x
         x = self.layer_norm2(x)
         x = self.mlp(x)
-        x = self.dropout2(x)
         x += residual
         
         return x
 
 class ViT(nn.Module):
-    def __init__(self, image_size, patch_size, num_classes, hidden_features, num_heads, num_layers, age_group, dropout):
+    def __init__(self, image_size, patch_size, num_classes, hidden_features, num_heads, num_layers, age_group):
         super().__init__()
         num_patches = (image_size // patch_size) ** 2
         patch_dim = 3 * patch_size ** 2
@@ -214,7 +210,7 @@ class ViT(nn.Module):
         
         # Transformer layers
         self.transformer_blocks = nn.ModuleList([
-            ViTBlock(hidden_features, hidden_features * 2, hidden_features, num_heads, dropout)
+            ViTBlock(hidden_features, hidden_features * 2, hidden_features, num_heads)
             for _ in range(num_layers)
         ])
         

@@ -263,7 +263,7 @@ class FR(BasicTask):
             #     da_loss * opt.fr_da_loss_weight
 
 
-            loss = id_loss + age_loss
+            loss = id_loss + opt.fr_age_loss_weight * age_loss
             total_loss = loss
 
 
