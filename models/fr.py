@@ -166,8 +166,8 @@ class FR(BasicTask):
         #         for key in estimation_network.state_dict().keys():
         #             f.write(key + '\n')
         scaler = amp.GradScaler()
-        # self.optimizer = optimizer
-        self.optimizer = optimizer_new
+        self.optimizer = optimizer
+        # self.optimizer = optimizer_new
         self.backbone = backbone
         self.head = head
         self.estimation_network = estimation_network
@@ -252,20 +252,19 @@ class FR(BasicTask):
             # If using VIT then feed images directly to estimation network
             # if opt.td_block:
 
-            x_age, x_group = self.estimation_network(images)
+            # x_age, x_group = self.estimation_network(images)
             
 
-            # x_age, x_group = self.estimation_network(x_age)
+            x_age, x_group = self.estimation_network(x_age)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
-            # da_loss = self.forward_da(x_id, ages)
-            # loss = id_loss + \
-            #     age_loss * opt.fr_age_loss_weight + \
-            #     da_loss * opt.fr_da_loss_weight
+            da_loss = self.forward_da(x_id, ages)
+            loss = id_loss + \
+                age_loss * opt.fr_age_loss_weight + \
+                da_loss * opt.fr_da_loss_weight
 
 
-            loss = id_loss + opt.fr_age_loss_weight * age_loss
+            # loss = id_loss + opt.fr_age_loss_weight * age_loss
             total_loss = loss
-
 
             if opt.amp:
                 total_loss = self.scaler.scale(loss)
@@ -279,15 +278,15 @@ class FR(BasicTask):
             else:
                 self.optimizer.step()
 
-            # id_loss, da_loss, age_loss = reduce_loss(
-            #     id_loss, da_loss, age_loss)
-            # self.adjust_learning_rate(n_iter)
-            # lr = self.optimizer.param_groups[0]['lr']
-            # self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
-
-            id_loss,  age_loss = reduce_loss(
-                id_loss, age_loss)
+            id_loss, da_loss, age_loss = reduce_loss(
+                id_loss, da_loss, age_loss)
             self.adjust_learning_rate(n_iter)
             lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg([id_loss, age_loss, lr], n_iter)
+            self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
+
+            # id_loss,  age_loss = reduce_loss(
+            #     id_loss, age_loss)
+            # self.adjust_learning_rate(n_iter)
+            # lr = self.optimizer.param_groups[0]['lr']
+            # self.logger.msg([id_loss, age_loss, lr], n_iter)
 
