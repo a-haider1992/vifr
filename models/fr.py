@@ -122,7 +122,7 @@ class FR(BasicTask):
         if opt.td_block:
             estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
                                      hidden_features=32, 
-                                     num_heads=2, num_layers=2, age_group=opt.age_group, dropout=0.01)
+                                     num_heads=2, num_layers=2, age_group=opt.age_group)
             # estimation_network = PreTrainedVIT(image_size=opt.image_size)
             optimizer_new = torch.optim.Adam(list(backbone.parameters()) +
                                         list(head.parameters()) +
