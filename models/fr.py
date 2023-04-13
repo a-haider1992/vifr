@@ -135,8 +135,8 @@ class FR(BasicTask):
             #     for key in backbone.state_dict().keys():
             #         f.write(key + '\n')
             
-            # estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=2,
-            #                       hidden_d=8, n_heads=2, out_d=101, age_group=opt.age_group)
+            # estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=5,
+            #                       hidden_d=32, n_heads=10, out_d=101, age_group=opt.age_group)
         else:
             estimation_network = AgeEstimationModule(
                 input_size=opt.image_size, age_group=opt.age_group)
