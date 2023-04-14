@@ -319,6 +319,7 @@ class FR(BasicTask):
             self.estimation_network.train()
             for _ in range(opt.evaluation_num_iter):
                 images, ages = train_fetcher.next()
+                images, ages = images.float(), ages.float()
                 embedding, x_id, x_age = self.backbone(images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
                 # print(get_dex_age(x_age).dtype)
