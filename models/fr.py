@@ -323,6 +323,7 @@ class FR(BasicTask):
                 print(get_dex_age(x_age).dtype)
                 print(ages.dtype)
                 age_loss = criterion(get_dex_age(x_age), ages)
+                print(age_loss.dtype)
                 total_loss += age_loss
                 optimizer.zero_grad()
                 age_loss.backward()
