@@ -83,7 +83,6 @@ class FR(BasicTask):
             # evaluation_loader = torch.utils.data.DataLoader(
             #     test_lfw_dataset, num_workers=opt.num_worker)
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
-            self.age_db_dataset = None
             print("Loading AgeDB or UTK dataset..")
             agedb_transform = transforms.Compose([
                 transforms.RandomHorizontalFlip(),
@@ -96,7 +95,7 @@ class FR(BasicTask):
             self.age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
             weights = None
             sampler = RandomSampler(
-                age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
+                self.age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
             train_loader = torch.utils.data.DataLoader(self.age_db_dataset,
                                                        batch_size=opt.batch_size,
                                                        sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
