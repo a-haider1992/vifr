@@ -206,7 +206,7 @@ class MTLFace(object):
                 image, age = self.fr.prefetcher.next()
                 embedding, x_id, x_age = self.fr.backbone(
                     image, return_age=True)
-                predicted_age, predicted_group = self.fr.estimation_network(self.grl(x_id))
+                predicted_age, predicted_group = self.fr.estimation_network(self.fr.grl(x_id))
                 # print("The correct age tensor shape is : {}".format(age.shape))
                 # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
                 if age.item() == torch.argmax(predicted_age).item():
