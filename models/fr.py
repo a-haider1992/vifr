@@ -215,7 +215,7 @@ class FR(BasicTask):
             self.da_discriminator.train()
             self.estimation_network.train()
             self.backbone.eval()
-            images, labels = inputs
+            images, ages = inputs
             embedding, x_id, x_age = self.backbone(images, return_age=True)
         else:
             # For casia-webface type datasets
