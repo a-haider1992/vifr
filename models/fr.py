@@ -93,7 +93,7 @@ class FR(BasicTask):
             ])
 
             torch.cuda.empty_cache()
-            age_db_dataset = TrainingDataAge('agedb_train.csv', agedb_transform)
+            age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
             agedb_evaluation_dataset = EvaluationDataAge('agedb_test.csv', agedb_transform)
             weights = None
             sampler = RandomSampler(
@@ -111,7 +111,7 @@ class FR(BasicTask):
         self.prefetcher = DataPrefetcher(train_loader)
 
         # # Evaluation prefetcher
-        self.eval_prefetcher = DataPrefetcher(evaluation_loader)
+        # self.eval_prefetcher = DataPrefetcher(evaluation_loader)
 
     def set_model(self):
         opt = self.opt
@@ -347,8 +347,8 @@ class FR(BasicTask):
                         image, return_age=True)
                 predicted_age, predicted_group = self.estimation_network(
                         x_age)
-                print("The correct age tensor shape is : {}".format(age.shape))
-                print("The predicted age tensor shape is : {}".format(predicted_age.shape))
+                # print("The correct age tensor shape is : {}".format(age.shape))
+                # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
                 if age.item() == torch.argmax(predicted_age).item():
                     total_correct_pred += 1
                 else:
