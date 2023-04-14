@@ -321,6 +321,7 @@ class FR(BasicTask):
                         images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
                 print(get_dex_age(x_age).dtype)
+                print(ages.dtype)
                 age_loss = criterion(get_dex_age(x_age), ages)
                 total_loss += age_loss
                 optimizer.zero_grad()
