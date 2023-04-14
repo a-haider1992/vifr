@@ -86,8 +86,8 @@ class FR(BasicTask):
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
             print("Loading AgeDB or UTK dataset..")
             agedb_transform = transforms.Compose([
-                transforms.Resize(512),
-                transforms.CenterCrop(opt.image_size),
+                transforms.Resize([512, 512]),
+                transforms.CenterCrop([opt.image_size, opt.image_size]),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
@@ -347,8 +347,8 @@ class FR(BasicTask):
                         image, return_age=True)
                 predicted_age, predicted_group = self.estimation_network(
                         x_age)
-                    # print("The correct age tensor shape is : {}".format(age.shape))
-                    # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
+                print("The correct age tensor shape is : {}".format(age.shape))
+                print("The predicted age tensor shape is : {}".format(predicted_age.shape))
                 if age.item() == torch.argmax(predicted_age).item():
                     total_correct_pred += 1
                 else:
