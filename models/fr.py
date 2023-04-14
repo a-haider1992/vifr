@@ -236,7 +236,7 @@ class FR(BasicTask):
 
         if opt.gfr:
             # Train GFR only
-            x_age, x_group = self.estimation_network(embedding)
+            x_age, x_group = self.estimation_network(x_id)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
             da_loss = self.forward_da(x_id, ages)
             loss = age_loss * opt.fr_age_loss_weight + \
