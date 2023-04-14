@@ -311,7 +311,7 @@ class FR(BasicTask):
                 test_dataset, batch_size=1, shuffle=False)
 
             for epoch in range(int(opt.evaluation_num_iter)):
-                self.fr.estimation_network.train()
+                self.estimation_network.train()
                 for i, (inputs, labels) in enumerate(train_loader):
                     optimizer.zero_grad()
                     embedding, x_id, x_age = self.backbone(
