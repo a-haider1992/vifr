@@ -86,8 +86,8 @@ class FR(BasicTask):
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
             print("Loading AgeDB or UTK dataset..")
             agedb_transform = transforms.Compose([
-                transforms.RandomHorizontalFlip(),
-                transforms.Resize([opt.image_size, opt.image_size]),
+                transforms.Resize(512),
+                transforms.CenterCrop(opt.image_size),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
@@ -341,8 +341,8 @@ class FR(BasicTask):
         total_correct_pred = 0
         total_incorrect_pred = 0
         with torch.no_grad():
-            for iter in range(50):
-                image, age = self.eval_prefetcher.next()
+            for iter in range(opt.evaluation_num_iter):
+                image, age = self.prefetcher.next()
                 embedding, x_id, x_age = self.backbone(
                         image, return_age=True)
                 predicted_age, predicted_group = self.estimation_network(
