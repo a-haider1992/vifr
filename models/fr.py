@@ -298,7 +298,7 @@ class FR(BasicTask):
         kfold = KFold(n_splits=10, shuffle=True)
 
         # Define loss function and optimizer
-        # criterion = torch.nn.CrossEntropyLoss()
+        criterion = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(list(self.estimation_network.parameters()),
                                         momentum=opt.momentum, lr=0.001)
 
@@ -322,6 +322,7 @@ class FR(BasicTask):
                         images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
                 age_loss = self.compute_age_loss(x_age, x_group, ages)
+                age_loss = age_loss.sum()
                 age_loss.backward()
                 optimizer.step()
             print("Age Estimation Model under evaluation.")
