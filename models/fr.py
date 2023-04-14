@@ -341,7 +341,7 @@ class FR(BasicTask):
         total_correct_pred = 0
         total_incorrect_pred = 0
         with torch.no_grad():
-            for iter in range(opt.evaluation_num_iter):
+            for _ in range(0, int(opt.evaluation_num_iter)):
                 image, age = self.prefetcher.next()
                 embedding, x_id, x_age = self.backbone(
                         image, return_age=True)
