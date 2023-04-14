@@ -200,7 +200,7 @@ class FR(BasicTask):
         opt = self.opt
         age_loss = F.mse_loss(get_dex_age(x_age), ages) + \
             F.cross_entropy(x_group, age2group(
-                ages, age_group=opt.age_group).long())
+                ages, age_group=opt.age_group).float())
         return age_loss
 
     def forward_da(self, x_id, ages):
@@ -313,18 +313,19 @@ class FR(BasicTask):
             
             train_fetcher = DataPrefetcher(train_loader)
             test_fetcher = DataPrefetcher(test_loader)
-
+            total_loss = 0.0
             while train_fetcher.next() is not None:
                 self.estimation_network.train()
                 images, ages = train_fetcher.next()
-                optimizer.zero_grad()
                 embedding, x_id, x_age = self.backbone(
                         images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
                 age_loss = self.compute_age_loss(x_age, x_group, ages)
-                age_loss = age_loss.sum()
+                total_loss += age_loss
+                optimizer.zero_grad()
                 age_loss.backward()
                 optimizer.step()
+            print(f'Fold {fold + 1} training loss : {total_loss}')
             print("Age Estimation Model under evaluation.")
             self.backbone.eval()
             self.estimation_network.eval()
