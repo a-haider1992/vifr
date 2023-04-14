@@ -320,7 +320,7 @@ class FR(BasicTask):
                 embedding, x_id, x_age = self.backbone(
                         images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
-                print(type(get_dex_age(x_age)))
+                print(get_dex_age(x_age).dtype)
                 age_loss = criterion(get_dex_age(x_age), ages)
                 total_loss += age_loss
                 optimizer.zero_grad()
