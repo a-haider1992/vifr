@@ -317,6 +317,7 @@ class FR(BasicTask):
             while train_fetcher.next() is not None:
                 self.estimation_network.train()
                 images, ages = train_fetcher.next()
+                ages = ages.float()
                 embedding, x_id, x_age = self.backbone(
                         images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
