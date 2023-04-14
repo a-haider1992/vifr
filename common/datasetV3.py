@@ -92,3 +92,10 @@ class TrainingDataAge(AgeDB):
 
     def __getitem__(self, index):
         return super().__getitem__(index)
+    
+class EvaluationDataAge(AgeDB):
+    def __init__(self, file, transform):
+        super().__init__(file, transform)
+
+    def __getitem__(self, index):
+        return super().__getitem__(index)

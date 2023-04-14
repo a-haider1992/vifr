@@ -154,7 +154,7 @@ class MTLFace(object):
             fr_inputs = self.fr.prefetcher.next()
             if opt.train_fr:
                 self.fr.train(fr_inputs, n_iter)
-            if opt.train_fas:
+            if opt.train_fas and not opt.gfr:
                 # target_img, target_label
                 fas_inputs = self.fas.prefetcher.next()
                 # backbone, age_estimation, source_img, target_img, source_label, target_label

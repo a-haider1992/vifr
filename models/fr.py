@@ -14,7 +14,7 @@ from backbone.aifr import backbone_dict, AgeEstimationModule
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
 from common.datasetV2 import TrainDataset, EvaluationDataset
-from common.datasetV3 import TrainingData, EvaluationData, TrainingDataAge
+from common.datasetV3 import TrainingData, EvaluationData, TrainingDataAge, EvaluationDataAge
 import pdb
 
 
@@ -93,16 +93,16 @@ class FR(BasicTask):
             ])
 
             torch.cuda.empty_cache()
-            self.age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
+            age_db_dataset = TrainingDataAge('agedb_train.csv', agedb_transform)
+            agedb_evaluation_dataset = EvaluationDataAge('agedb_test.csv', agedb_transform)
             weights = None
             sampler = RandomSampler(
-                self.age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
-            train_loader = torch.utils.data.DataLoader(self.age_db_dataset,
+                age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
+            train_loader = torch.utils.data.DataLoader(age_db_dataset,
                                                        batch_size=opt.batch_size,
                                                        sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
                                                        drop_last=True)
-            print(
-                f"GPU memory allocated after loading data: {torch.cuda.memory_allocated()} bytes")
+            evaluation_loader = torch.utils.data.DataLoader(agedb_evaluation_dataset, batch_size=1, num_workers=opt.num_worker)
 
         else:
             return Exception("Database doesn't exist.")
@@ -111,7 +111,7 @@ class FR(BasicTask):
         self.prefetcher = DataPrefetcher(train_loader)
 
         # # Evaluation prefetcher
-        # self.eval_prefetcher = DataPrefetcher(evaluation_loader)
+        self.eval_prefetcher = DataPrefetcher(evaluation_loader)
 
     def set_model(self):
         opt = self.opt
@@ -146,9 +146,7 @@ class FR(BasicTask):
             input_size=opt.image_size, age_group=opt.age_group)
         has_backbone_params = False
         if opt.gfr:
-            optimizer = torch.optim.SGD(list(head.parameters()) +
-                                        list(backbone.parameters()),
-                                        momentum=opt.momentum, lr=opt.learning_rate)
+            optimizer = torch.optim.Adam(list(estimation_network.parameters()), lr=0.001)
             # Freeze all layers except last
             # last_layer_name = list(backbone.named_modules())[-1][0]
             # for name, param in backbone.named_parameters():
@@ -211,15 +209,17 @@ class FR(BasicTask):
     def train(self, inputs, n_iter):
         opt = self.opt
 
-        self.head.train()
-
         if opt.gfr:
-            # For LFW type datasets
+            # AgeDB
             # A pre-trained backbone is used
+            self.da_discriminator.train()
+            self.estimation_network.train()
+            self.backbone.eval()
             images, labels = inputs
-            embedding = self.backbone(images)
+            embedding, x_id, x_age = self.backbone(images, return_age=True)
         else:
             # For casia-webface type datasets
+            self.head.train()
             self.backbone.train()
             images, labels, ages, genders = inputs
             self.da_discriminator.train()
@@ -236,16 +236,20 @@ class FR(BasicTask):
 
         if opt.gfr:
             # Train GFR only
-            id_loss = F.cross_entropy(self.head(embedding, labels), labels)
+            x_age, x_group = self.estimation_network(x_age)
+            age_loss = self.compute_age_loss(x_age, x_group, ages)
+            da_loss = self.forward_da(x_id, ages)
+            loss = age_loss * opt.fr_age_loss_weight + \
+                da_loss * opt.fr_da_loss_weight
             self.optimizer.zero_grad()
-            id_loss.backward()
+            loss.backward()
             self.optimizer.step()
             apply_weight_decay(self.head,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
-            id_loss = reduce_loss(id_loss)
-            self.adjust_learning_rate(n_iter)
-            lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg([id_loss, lr], n_iter)
+            age_loss, da_loss = reduce_loss(age_loss, da_loss)
+            # self.adjust_learning_rate(n_iter)
+            # lr = self.optimizer.param_groups[0]['lr']
+            self.logger.msg([age_loss, da_loss, lr], n_iter)
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
@@ -293,64 +297,66 @@ class FR(BasicTask):
     
     def train_pretrained_eval(self):
         opt = self.opt
-        from sklearn.model_selection import KFold
-        # 10-fold cross-validation here
-        kfold = KFold(n_splits=10, shuffle=True)
+        # from sklearn.model_selection import KFold
+        # # 10-fold cross-validation here
+        # kfold = KFold(n_splits=10, shuffle=True)
 
-        self.backbone.eval()
+        # self.backbone.eval()
 
-        # Define loss function and optimizer
-        criterion = torch.nn.MSELoss()
-        optimizer = torch.optim.SGD(list(self.estimation_network.parameters()),
-                                        momentum=opt.momentum, lr=0.001)
+        # # Define loss function and optimizer
+        # criterion = torch.nn.MSELoss()
+        # optimizer = torch.optim.SGD(list(self.estimation_network.parameters()),
+        #                                 momentum=opt.momentum, lr=0.001)
 
-        for fold, (train_idx, test_idx) in enumerate(kfold.split(self.age_db_dataset)):
-            train_dataset = torch.utils.data.Subset(self.age_db_dataset, train_idx)
-            test_dataset = torch.utils.data.Subset(self.age_db_dataset, test_idx)
+        # for fold, (train_idx, test_idx) in enumerate(kfold.split(self.age_db_dataset)):
+        #     train_dataset = torch.utils.data.Subset(self.age_db_dataset, train_idx)
+        #     test_dataset = torch.utils.data.Subset(self.age_db_dataset, test_idx)
 
-            train_loader = torch.utils.data.DataLoader(
-                train_dataset, batch_size=opt.eval_batch_size, shuffle=True)
-            test_loader = torch.utils.data.DataLoader(
-                test_dataset, batch_size=1, shuffle=False)
+        #     train_loader = torch.utils.data.DataLoader(
+        #         train_dataset, batch_size=opt.eval_batch_size, shuffle=True)
+        #     test_loader = torch.utils.data.DataLoader(
+        #         test_dataset, batch_size=1, shuffle=False)
             
-            train_fetcher = DataPrefetcher(train_loader)
-            test_fetcher = DataPrefetcher(test_loader)
-            total_loss = 0.0
-            self.estimation_network.train()
-            for _ in range(opt.evaluation_num_iter):
-                images, ages = train_fetcher.next()
-                images, ages = images.float(), ages.float()
-                embedding, x_id, x_age = self.backbone(images, return_age=True)
-                x_age, x_group = self.estimation_network(x_age)
-                # print(get_dex_age(x_age).dtype)
-                # print(ages.dtype)
-                age_loss = self.compute_age_loss(x_age, x_group, ages)
-                loss = age_loss
-                # print(age_loss.dtype)
-                # total_loss += age_loss
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-            print(f'Fold {fold + 1} training loss : {total_loss}')
-            print("Age Estimation Model under evaluation.")
-            self.estimation_network.eval()
-            total_correct_pred = 0
-            total_incorrect_pred = 0
-            with torch.no_grad():
-                for iter in range(50):
-                    image, age = test_fetcher.next()
-                    embedding, x_id, x_age = self.backbone(
-                            image, return_age=True)
-                    predicted_age, predicted_group = self.estimation_network(
-                            x_age)
-                        # print("The correct age tensor shape is : {}".format(age.shape))
-                        # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
-                    if age.item() == torch.argmax(predicted_age).item():
-                        total_correct_pred += 1
-                    else:
-                        total_incorrect_pred += 1
-                            # print("The correct age is : {}".format(age.item()))
-                            # print("The predicted age is : {}".format(
-                            #     torch.argmax(predicted_age).item()))
-                accuracy = total_correct_pred / (total_correct_pred+total_incorrect_pred)
-                print(f'Fold {fold + 1} accuracy: {accuracy}')
+        #     train_fetcher = DataPrefetcher(train_loader)
+        #     test_fetcher = DataPrefetcher(test_loader)
+        #     total_loss = 0.0
+        #     self.estimation_network.train()
+        #     for _ in range(opt.evaluation_num_iter):
+        #         images, ages = train_fetcher.next()
+        #         embedding, x_id, x_age = self.backbone(images, return_age=True)
+        #         x_age, x_group = self.estimation_network(x_age)
+        #         # print(get_dex_age(x_age).dtype)
+        #         # print(ages.dtype)
+        #         age_loss = self.compute_age_loss(x_age, x_group, ages)
+        #         loss = age_loss
+        #         # print(age_loss.dtype)
+        #         # total_loss += age_loss
+        #         optimizer.zero_grad()
+        #         loss.backward()
+        #         optimizer.step()
+        #     print(f'Fold {fold + 1} training loss : {total_loss}')
+        print("Age Estimation Model under evaluation.")
+        self.estimation_network.eval()
+        self.backbone.eval()
+        total_correct_pred = 0
+        total_incorrect_pred = 0
+        with torch.no_grad():
+            for iter in range(50):
+                image, age = self.eval_prefetcher.next()
+                embedding, x_id, x_age = self.backbone(
+                        image, return_age=True)
+                predicted_age, predicted_group = self.estimation_network(
+                        x_age)
+                    # print("The correct age tensor shape is : {}".format(age.shape))
+                    # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
+                if age.item() == torch.argmax(predicted_age).item():
+                    total_correct_pred += 1
+                else:
+                    total_incorrect_pred += 1
+                        # print("The correct age is : {}".format(age.item()))
+                        # print("The predicted age is : {}".format(
+                        #     torch.argmax(predicted_age).item()))
+            accuracy = total_correct_pred / (total_correct_pred+total_incorrect_pred)
+            print(f'The correct predictions are {total_correct_pred}')
+            print(f'The Incorrect predictions are {total_incorrect_pred}')
+            print(f'The accuracy of Age estimation model : {accuracy}')
