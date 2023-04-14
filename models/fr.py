@@ -316,18 +316,18 @@ class FR(BasicTask):
             total_loss = 0.0
             while train_fetcher.next() is not None:
                 self.estimation_network.train()
-                optimizer.zero_grad()
                 images, ages = train_fetcher.next()
-                ages = ages.float()
-                embedding, x_id, x_age = self.backbone(
-                        images, return_age=True)
-                x_age, x_group = self.estimation_network(x_age)
+                images, ages = images.float(), ages.float()
+                embedding, x_id, x_age = self.backbone(images, return_age=True)
+                x_age, x_group = self.estimation_network(x_age.float())
                 # print(get_dex_age(x_age).dtype)
                 # print(ages.dtype)
                 age_loss = self.compute_age_loss(x_age, x_group, ages)
+                loss = age_loss
                 # print(age_loss.dtype)
                 # total_loss += age_loss
-                age_loss.backward()
+                optimizer.zero_grad()
+                loss.backward()
                 optimizer.step()
             print(f'Fold {fold + 1} training loss : {total_loss}')
             print("Age Estimation Model under evaluation.")
