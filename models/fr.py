@@ -313,7 +313,7 @@ class FR(BasicTask):
             train_fetcher = DataPrefetcher(train_loader)
             test_fetcher = DataPrefetcher(test_loader)
 
-            for epoch in range(int(opt.evaluation_num_iter)):
+            while train_fetcher.next() is not None:
                 self.estimation_network.train()
                 images, ages = train_fetcher.next()
                 optimizer.zero_grad()
@@ -321,6 +321,7 @@ class FR(BasicTask):
                         images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
                 age_loss = self.compute_age_loss(x_age, x_group, ages)
+                age_loss = age_loss.float()
                 age_loss.backward()
                 optimizer.step()
             print("Age Estimation Model under evaluation.")
