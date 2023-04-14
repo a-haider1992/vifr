@@ -316,10 +316,9 @@ class FR(BasicTask):
             train_fetcher = DataPrefetcher(train_loader)
             test_fetcher = DataPrefetcher(test_loader)
             total_loss = 0.0
-            while train_fetcher.next() is not None:
-                self.estimation_network.train()
+            self.estimation_network.train()
+            for _ in range(opt.evaluation_num_iter):
                 images, ages = train_fetcher.next()
-                images, ages = images.float(), ages.float()
                 embedding, x_id, x_age = self.backbone(images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
                 # print(get_dex_age(x_age).dtype)
@@ -337,7 +336,7 @@ class FR(BasicTask):
             total_correct_pred = 0
             total_incorrect_pred = 0
             with torch.no_grad():
-                while test_fetcher.next() is not None:
+                for iter in range(50):
                     image, age = test_fetcher.next()
                     embedding, x_id, x_age = self.backbone(
                             image, return_age=True)
