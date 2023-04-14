@@ -298,7 +298,7 @@ class FR(BasicTask):
         kfold = KFold(n_splits=10, shuffle=True)
 
         # Define loss function and optimizer
-        criterion = torch.nn.CrossEntropyLoss()
+        # criterion = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.estimation_network.parameters(), lr=0.001)
 
         for fold, (train_idx, test_idx) in enumerate(kfold.split(self.age_db_dataset)):
@@ -309,35 +309,38 @@ class FR(BasicTask):
                 train_dataset, batch_size=opt.eval_batch_size, shuffle=True)
             test_loader = torch.utils.data.DataLoader(
                 test_dataset, batch_size=1, shuffle=False)
+            
+            train_fetcher = DataPrefetcher(train_loader)
+            test_fetcher = DataPrefetcher(test_loader)
 
             for epoch in range(int(opt.evaluation_num_iter)):
                 self.estimation_network.train()
-                for i, (inputs, labels) in enumerate(train_loader):
-                    optimizer.zero_grad()
-                    embedding, x_id, x_age = self.backbone(
-                        inputs, return_age=True)
-                    x_age, x_group = self.estimation_network(x_age)
-                    age_loss = self.compute_age_loss(x_age, x_group, labels)
-                    age_loss.backward()
-                    optimizer.step()
+                images, ages = train_fetcher.next()
+                optimizer.zero_grad()
+                embedding, x_id, x_age = self.backbone(
+                        images, return_age=True)
+                x_age, x_group = self.estimation_network(x_age)
+                age_loss = self.compute_age_loss(x_age, x_group, ages)
+                age_loss.backward()
+                optimizer.step()
             print("Age Estimation Model under evaluation.")
             self.backbone.eval()
             self.estimation_network.eval()
             total_correct_pred = 0
             total_incorrect_pred = 0
             with torch.no_grad():
-                for inputs, labels in test_loader:
-                    # image, age = self.fr.prefetcher.next()
-                        embedding, x_id, x_age = self.backbone(
-                            inputs, return_age=True)
-                        predicted_age, predicted_group = self.estimation_network(
+                while test_fetcher.next() is not None:
+                    image, age = test_fetcher.next()
+                    embedding, x_id, x_age = self.backbone(
+                            image, return_age=True)
+                    predicted_age, predicted_group = self.estimation_network(
                             x_age)
                         # print("The correct age tensor shape is : {}".format(age.shape))
                         # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
-                        if labels.item() == torch.argmax(predicted_age).item():
-                            total_correct_pred += 1
-                        else:
-                            total_incorrect_pred += 1
+                    if age.item() == torch.argmax(predicted_age).item():
+                        total_correct_pred += 1
+                    else:
+                        total_incorrect_pred += 1
                             # print("The correct age is : {}".format(age.item()))
                             # print("The predicted age is : {}".format(
                             #     torch.argmax(predicted_age).item()))
