@@ -44,7 +44,8 @@ class FR(BasicTask):
 
             train_dataset = TrainImageDataset(
                 opt.dataset_name, self.train_transform)
-            age_db_dataset = TrainingDataAge('AgeDB.csv', self.evaluation_transform)
+            age_db_dataset = TrainingDataAge(
+                'AgeDB.csv', self.evaluation_transform)
             # evaluation_dataset = EvaluationImageDataset(
             #     opt.evaluation_dataset, self.evaluation_transform)
             weights = None
@@ -121,7 +122,7 @@ class FR(BasicTask):
         # if age estimation network to TD block VIT
         if opt.td_block:
             estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
-                                     hidden_features=32, 
+                                     hidden_features=32,
                                      num_heads=2, num_layers=2, age_group=opt.age_group)
             # estimation_network = PreTrainedVIT(image_size=opt.image_size)
             optimizer_new = torch.optim.Adam(list(backbone.parameters()) +
@@ -134,7 +135,7 @@ class FR(BasicTask):
             # with open('backbone_keys.txt', 'w') as f:
             #     for key in backbone.state_dict().keys():
             #         f.write(key + '\n')
-            
+
             # estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=5,
             #                       hidden_d=32, n_heads=10, out_d=101, age_group=opt.age_group)
         else:
@@ -289,4 +290,56 @@ class FR(BasicTask):
             # self.adjust_learning_rate(n_iter)
             # lr = self.optimizer.param_groups[0]['lr']
             # self.logger.msg([id_loss, age_loss, lr], n_iter)
+    
+    def train_pretrained_eval(self):
+        opt = self.opt
+        from sklearn.model_selection import KFold
+        # 10-fold cross-validation here
+        kfold = KFold(n_splits=10, shuffle=True)
 
+        # Define loss function and optimizer
+        criterion = torch.nn.CrossEntropyLoss()
+        optimizer = torch.optim.Adam(self.estimation_network.parameters(), lr=0.001)
+
+        for fold, (train_idx, test_idx) in enumerate(kfold.split(self.fr.age_db_dataset)):
+            train_dataset = torch.utils.data.Subset(self.fr.age_db_dataset, train_idx)
+            test_dataset = torch.utils.data.Subset(self.fr.age_db_dataset, test_idx)
+
+            train_loader = torch.utils.data.DataLoader(
+                train_dataset, batch_size=opt.eval_batch_size, shuffle=True)
+            test_loader = torch.utils.data.DataLoader(
+                test_dataset, batch_size=1, shuffle=False)
+
+            for epoch in range(int(opt.evaluation_num_iter)):
+                self.fr.estimation_network.train()
+                for i, (inputs, labels) in enumerate(train_loader):
+                    optimizer.zero_grad()
+                    embedding, x_id, x_age = self.backbone(
+                        inputs, return_age=True)
+                    x_age, x_group = self.estimation_network(x_age)
+                    age_loss = self.compute_age_loss(x_age, x_group, labels)
+                    age_loss.backward()
+                    optimizer.step()
+            print("Age Estimation Model under evaluation.")
+            self.backbone.eval()
+            self.estimation_network.eval()
+            total_correct_pred = 0
+            total_incorrect_pred = 0
+            with torch.no_grad():
+                for inputs, labels in test_loader:
+                    # image, age = self.fr.prefetcher.next()
+                        embedding, x_id, x_age = self.fr.backbone(
+                            inputs, return_age=True)
+                        predicted_age, predicted_group = self.fr.estimation_network(
+                            x_age)
+                        # print("The correct age tensor shape is : {}".format(age.shape))
+                        # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
+                        if labels.item() == torch.argmax(predicted_age).item():
+                            total_correct_pred += 1
+                        else:
+                            total_incorrect_pred += 1
+                            # print("The correct age is : {}".format(age.item()))
+                            # print("The predicted age is : {}".format(
+                            #     torch.argmax(predicted_age).item()))
+                accuracy = total_correct_pred / (total_correct_pred+total_incorrect_pred)
+                print(f'Fold {fold + 1} accuracy: {accuracy}')
