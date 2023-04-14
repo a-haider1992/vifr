@@ -301,9 +301,9 @@ class FR(BasicTask):
         criterion = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.estimation_network.parameters(), lr=0.001)
 
-        for fold, (train_idx, test_idx) in enumerate(kfold.split(self.fr.age_db_dataset)):
-            train_dataset = torch.utils.data.Subset(self.fr.age_db_dataset, train_idx)
-            test_dataset = torch.utils.data.Subset(self.fr.age_db_dataset, test_idx)
+        for fold, (train_idx, test_idx) in enumerate(kfold.split(self.age_db_dataset)):
+            train_dataset = torch.utils.data.Subset(self.age_db_dataset, train_idx)
+            test_dataset = torch.utils.data.Subset(self.age_db_dataset, test_idx)
 
             train_loader = torch.utils.data.DataLoader(
                 train_dataset, batch_size=opt.eval_batch_size, shuffle=True)
@@ -328,9 +328,9 @@ class FR(BasicTask):
             with torch.no_grad():
                 for inputs, labels in test_loader:
                     # image, age = self.fr.prefetcher.next()
-                        embedding, x_id, x_age = self.fr.backbone(
+                        embedding, x_id, x_age = self.backbone(
                             inputs, return_age=True)
-                        predicted_age, predicted_group = self.fr.estimation_network(
+                        predicted_age, predicted_group = self.estimation_network(
                             x_age)
                         # print("The correct age tensor shape is : {}".format(age.shape))
                         # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
