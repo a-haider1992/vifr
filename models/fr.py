@@ -216,7 +216,7 @@ class FR(BasicTask):
             self.estimation_network.train()
             self.backbone.eval()
             images, ages = inputs
-            embedding, x_id, x_age = self.backbone(images, return_age=True)
+            embedding, x_id, x_age = self.backbone(images.float(), return_age=True)
         else:
             # For casia-webface type datasets
             self.head.train()
