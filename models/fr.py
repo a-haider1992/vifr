@@ -318,15 +318,15 @@ class FR(BasicTask):
                 self.estimation_network.train()
                 images, ages = train_fetcher.next()
                 ages = ages.float()
+                optimizer.zero_grad()
                 embedding, x_id, x_age = self.backbone(
                         images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
-                print(get_dex_age(x_age).dtype)
-                print(ages.dtype)
+                # print(get_dex_age(x_age).dtype)
+                # print(ages.dtype)
                 age_loss = self.compute_age_loss(x_age, x_group, ages)
-                print(age_loss.dtype)
-                total_loss += age_loss
-                optimizer.zero_grad()
+                # print(age_loss.dtype)
+                # total_loss += age_loss
                 age_loss.backward()
                 optimizer.step()
             print(f'Fold {fold + 1} training loss : {total_loss}')
