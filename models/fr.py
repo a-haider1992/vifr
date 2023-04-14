@@ -323,7 +323,7 @@ class FR(BasicTask):
                 x_age, x_group = self.estimation_network(x_age)
                 print(get_dex_age(x_age).dtype)
                 print(ages.dtype)
-                age_loss = criterion(get_dex_age(x_age), ages)
+                age_loss = self.compute_age_loss(x_age, x_group, ages)
                 print(age_loss.dtype)
                 total_loss += age_loss
                 optimizer.zero_grad()
