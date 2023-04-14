@@ -219,7 +219,9 @@ class MTLFace(object):
                 self.fr.estimation_network.train()
                 for i, (inputs, labels) in enumerate(train_loader):
                     optimizer.zero_grad()
-                    pred_ages, groups = self.fr.estimation_network(inputs)
+                    embedding, x_id, x_age = self.fr.backbone(
+                        inputs, return_age=True)
+                    pred_ages, groups = self.fr.estimation_network(x_age)
                     loss = criterion(pred_ages, labels)
                     loss.backward()
                     optimizer.step()
