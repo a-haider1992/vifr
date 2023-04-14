@@ -200,7 +200,7 @@ class FR(BasicTask):
         opt = self.opt
         age_loss = F.mse_loss(get_dex_age(x_age), ages) + \
             F.cross_entropy(x_group, age2group(
-                ages, age_group=opt.age_group).float())
+                ages, age_group=opt.age_group).long())
         return age_loss
 
     def forward_da(self, x_id, ages):
@@ -298,7 +298,7 @@ class FR(BasicTask):
         kfold = KFold(n_splits=10, shuffle=True)
 
         # Define loss function and optimizer
-        criterion = torch.nn.CrossEntropyLoss()
+        # criterion = torch.nn.mseLoss()
         optimizer = torch.optim.SGD(list(self.estimation_network.parameters()),
                                         momentum=opt.momentum, lr=0.001)
 
@@ -320,7 +320,7 @@ class FR(BasicTask):
                 embedding, x_id, x_age = self.backbone(
                         images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
-                age_loss = self.compute_age_loss(x_age, x_group, ages)
+                age_loss = F.mse_loss(get_dex_age(x_age), ages)
                 total_loss += age_loss
                 optimizer.zero_grad()
                 age_loss.backward()
