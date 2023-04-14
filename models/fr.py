@@ -298,7 +298,7 @@ class FR(BasicTask):
         kfold = KFold(n_splits=10, shuffle=True)
 
         # Define loss function and optimizer
-        # criterion = torch.nn.mseLoss()
+        criterion = torch.nn.MSELoss()
         optimizer = torch.optim.SGD(list(self.estimation_network.parameters()),
                                         momentum=opt.momentum, lr=0.001)
 
@@ -320,7 +320,7 @@ class FR(BasicTask):
                 embedding, x_id, x_age = self.backbone(
                         images, return_age=True)
                 x_age, x_group = self.estimation_network(x_age)
-                age_loss = F.mse_loss(get_dex_age(x_age), ages)
+                age_loss = criterion(get_dex_age(x_age), ages)
                 total_loss += age_loss
                 optimizer.zero_grad()
                 age_loss.backward()
