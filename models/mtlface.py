@@ -201,6 +201,7 @@ class MTLFace(object):
 
         # 10-fold cross-validation here
         kfold = KFold(n_splits=10, shuffle=True)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Define loss function and optimizer
         criterion = nn.CrossEntropyLoss()
@@ -218,6 +219,7 @@ class MTLFace(object):
             for epoch in range(int(opt.evaluation_num_iter)):
                 self.fr.estimation_network.train()
                 for i, (inputs, labels) in enumerate(train_loader):
+                    inputs, labels = inputs.to(device), labels.to(device)
                     optimizer.zero_grad()
                     embedding, x_id, x_age = self.fr.backbone(
                         inputs, return_age=True)
