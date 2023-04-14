@@ -83,6 +83,7 @@ class FR(BasicTask):
             # evaluation_loader = torch.utils.data.DataLoader(
             #     test_lfw_dataset, num_workers=opt.num_worker)
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
+            self.age_db_dataset = None
             print("Loading AgeDB or UTK dataset..")
             agedb_transform = transforms.Compose([
                 transforms.RandomHorizontalFlip(),
