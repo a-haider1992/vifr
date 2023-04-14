@@ -297,6 +297,8 @@ class FR(BasicTask):
         # 10-fold cross-validation here
         kfold = KFold(n_splits=10, shuffle=True)
 
+        self.backbone.eval()
+
         # Define loss function and optimizer
         criterion = torch.nn.MSELoss()
         optimizer = torch.optim.SGD(list(self.estimation_network.parameters()),
@@ -319,7 +321,7 @@ class FR(BasicTask):
                 images, ages = train_fetcher.next()
                 images, ages = images.float(), ages.float()
                 embedding, x_id, x_age = self.backbone(images, return_age=True)
-                x_age, x_group = self.estimation_network(x_age.float())
+                x_age, x_group = self.estimation_network(x_age)
                 # print(get_dex_age(x_age).dtype)
                 # print(ages.dtype)
                 age_loss = self.compute_age_loss(x_age, x_group, ages)
@@ -331,7 +333,6 @@ class FR(BasicTask):
                 optimizer.step()
             print(f'Fold {fold + 1} training loss : {total_loss}')
             print("Age Estimation Model under evaluation.")
-            self.backbone.eval()
             self.estimation_network.eval()
             total_correct_pred = 0
             total_incorrect_pred = 0
