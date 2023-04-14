@@ -10,6 +10,10 @@ import os
 import torch
 import torch.nn.functional as F
 import torch.distributed as dist
+from sklearn.model_selection import KFold
+from torch.utils.data import DataLoader, Subset, Dataset
+import torch.nn as nn
+import torch
 
 '''
 python -m torch.distributed.launch --nproc_per_node=8 --master_port=17647 main.py \
@@ -194,33 +198,63 @@ class MTLFace(object):
 
     def evaluate_age_estimation(self):
         opt = self.opt
-        torch.cuda.empty_cache()
-        print("Age Estimation Model under evaluation.")
-        self.fr.backbone.eval()
-        self.fr.estimation_network.eval()
-        total_correct_pred = 0
-        total_incorrect_pred = 0
-        total_iter = int(opt.evaluation_num_iter)
-        with torch.no_grad():
-            for _ in range(0, total_iter):
-                image, age = self.fr.prefetcher.next()
-                embedding, x_id, x_age = self.fr.backbone(
-                    image, return_age=True)
-                predicted_age, predicted_group = self.fr.estimation_network(x_age)
-                # print("The correct age tensor shape is : {}".format(age.shape))
-                # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
-                if age.item() == torch.argmax(predicted_age).item():
-                    total_correct_pred += 1
-                else:
-                    total_incorrect_pred += 1
-                    print("The correct age is : {}".format(age.item()))
-                    print("The predicted age is : {}".format(torch.argmax(predicted_age).item()))
-            print("During evaluation, the model corectly predicts {} number of classes.".format(
-                total_correct_pred))
-            print("During evaluation, the model incorrectly predicts {} number of classes.".format(
-                total_incorrect_pred))
-            print("Model Accuracy:{}".format(total_correct_pred /
-                  (total_correct_pred+total_incorrect_pred)))
+
+        # 10-fold cross-validation here
+        kfold = KFold(n_splits=10, shuffle=True)
+
+        # Define loss function and optimizer
+        criterion = nn.CrossEntropyLoss()
+        optimizer = torch.optim.Adam(self.fr.estimation_network.parameters(), lr=0.001)
+
+        for fold, (train_idx, test_idx) in enumerate(kfold.split(self.fr.age_db_dataset)):
+            train_dataset = Subset(self.fr.age_db_dataset, train_idx)
+            test_dataset = Subset(self.fr.age_db_dataset, test_idx)
+
+            train_loader = DataLoader(
+                train_dataset, batch_size=32, shuffle=True)
+            test_loader = DataLoader(
+                test_dataset, batch_size=1, shuffle=False)
+
+            for epoch in range(int(opt.evaluation_num_iter)):
+                self.fr.estimation_network.train()
+                for i, (inputs, labels) in enumerate(train_loader):
+                    optimizer.zero_grad()
+                    pred_ages, groups = self.fr.estimation_network(inputs)
+                    loss = criterion(pred_ages, labels)
+                    loss.backward()
+                    optimizer.step()
+
+            ## Evaluation here
+            print("Age Estimation Model under evaluation.")
+            self.fr.backbone.eval()
+            self.fr.estimation_network.eval()
+            total_correct_pred = 0
+            total_incorrect_pred = 0
+            total_iter = int(opt.evaluation_num_iter)
+            with torch.no_grad():
+                for inputs, labels in test_loader:
+                    # image, age = self.fr.prefetcher.next()
+                    embedding, x_id, x_age = self.fr.backbone(
+                        inputs, return_age=True)
+                    predicted_age, predicted_group = self.fr.estimation_network(
+                        x_age)
+                    # print("The correct age tensor shape is : {}".format(age.shape))
+                    # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
+                    if labels.item() == torch.argmax(predicted_age).item():
+                        total_correct_pred += 1
+                    else:
+                        total_incorrect_pred += 1
+                        # print("The correct age is : {}".format(age.item()))
+                        # print("The predicted age is : {}".format(
+                        #     torch.argmax(predicted_age).item()))
+                accuracy = total_correct_pred / (total_correct_pred+total_incorrect_pred)
+                print(f'Fold {fold + 1} accuracy: {accuracy}')
+                # print("During evaluation, the model corectly predicts {} number of classes.".format(
+                #     total_correct_pred))
+                # print("During evaluation, the model incorrectly predicts {} number of classes.".format(
+                #     total_incorrect_pred))
+                # print("Model Accuracy:{}".format(total_correct_pred /
+                #     (total_correct_pred+total_incorrect_pred)))
 
     def evaluate_mtlface(self):
         # evaluate trained model
