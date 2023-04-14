@@ -216,7 +216,7 @@ class FR(BasicTask):
             self.estimation_network.train()
             self.backbone.eval()
             images, ages = inputs
-            embedding, x_id, x_age = self.backbone(images.float(), return_age=True)
+            embedding, x_id, x_age = self.backbone(images, return_age=True)
         else:
             # For casia-webface type datasets
             self.head.train()
@@ -236,7 +236,7 @@ class FR(BasicTask):
 
         if opt.gfr:
             # Train GFR only
-            x_age, x_group = self.estimation_network(x_age)
+            x_age, x_group = self.estimation_network(embedding)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
             da_loss = self.forward_da(x_id, ages)
             loss = age_loss * opt.fr_age_loss_weight + \
