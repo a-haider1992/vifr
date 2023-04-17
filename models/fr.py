@@ -352,9 +352,9 @@ class FR(BasicTask):
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred += 1
-                        # print("The correct age is : {}".format(age.item()))
-                        # print("The predicted age is : {}".format(
-                        #     torch.argmax(predicted_age).item()))
+                    print("The correct age is : {}".format(age.item()))
+                    print("The predicted age is : {}".format(
+                        torch.argmax(predicted_age).item()))
             accuracy = total_correct_pred / (total_correct_pred+total_incorrect_pred)
             print(f'The correct predictions are {total_correct_pred}')
             print(f'The Incorrect predictions are {total_incorrect_pred}')
