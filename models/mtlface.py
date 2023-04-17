@@ -113,6 +113,12 @@ class MTLFace(object):
         parser.add_argument("--model_save", "-s",
                             help='save trained model path', type=str)
         parser.add_argument("--td_block", help='Use VIT', action='store_true')
+        parser.add_argument(
+            "--vit_hidden_f", help='number of hidden features in VIT', default=32, type=int)
+        parser.add_argument(
+            "--vit_heads", help='number of heads in VIT', default=4, type=int)
+        parser.add_argument(
+            "--vit_blocks", help='number of VIT blocks', default=2, type=int)
 
         # GENERAL FACE RECOGNITION
         parser.add_argument("--gfr", help='general face recognition without age',

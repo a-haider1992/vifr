@@ -121,8 +121,8 @@ class FR(BasicTask):
         # if age estimation network to TD block VIT
         if opt.td_block:
             da_discriminator = estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
-                                     hidden_features=512,
-                                     num_heads=4, num_layers=4, age_group=opt.age_group)
+                                     hidden_features=opt.vit_hidden_f,
+                                     num_heads=opt.vit_heads, num_layers=opt.vit_blocks, age_group=opt.age_group)
             # estimation_network = PreTrainedVIT(image_size=opt.image_size)
             optimizer_new = torch.optim.Adam(list(backbone.parameters()) +
                                         list(head.parameters()) +
