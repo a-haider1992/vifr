@@ -342,20 +342,54 @@ class FR(BasicTask):
         with torch.no_grad():
             for _ in range(0, int(opt.evaluation_num_iter)):
                 image, age = self.prefetcher.next()
+                target_age = age.item()
+                target_group = 0
+                if target_age >= 10 and target_age <= 20:
+                    target_group = 1
+                elif target_age >= 20 and target_age <= 30:
+                    target_group = 2
+                elif target_age >= 30 and target_age <= 40:
+                    target_group = 3
+                elif target_age >= 40 and target_age <= 50:
+                    target_group = 4
+                elif target_age >=50 and target_age <=60:
+                    target_group = 5
+                elif target_age > 60:
+                    target_group = 6
+                elif target_age < 10:
+                    target_group = 0
                 embedding, x_id, x_age = self.backbone(
                         image, return_age=True)
                 predicted_age, predicted_group = self.estimation_network(
                         x_age)
                 # print("The correct age tensor shape is : {}".format(age.shape))
                 # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
-                if age.item() == torch.argmax(predicted_age).item():
+                pred_group = 0
+                pred_age = torch.argmax(predicted_age).item()
+                predicted_group = torch.argmax(predicted_group).item()
+                # if pred_age >= 10 and pred_age <= 20:
+                #     pred_group = 1
+                # elif pred_age >= 20 and pred_age <= 30:
+                #     pred_group = 2
+                # elif pred_age >= 30 and pred_age <= 40:
+                #     pred_group = 3
+                # elif pred_age >= 40 and pred_age <= 50:
+                #     pred_group = 4
+                # elif pred_age >=50 and pred_age <=60:
+                #     pred_group = 5
+                # elif pred_age > 60:
+                #     pred_group = 6
+                # elif pred_age < 10:
+                #     pred_group = 0
+                if target_age == pred_age or predicted_group == target_group:
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred += 1
-                    print("The correct age is : {}".format(age.item()))
-                    print("The predicted age is : {}".format(
-                        torch.argmax(predicted_age).item()))
+                    print("The correct age is : {}".format(target_age))
+                    print("The predicted age is : {}".format(pred_age))
+                    print("The correct age group is : {}".format(target_group))
+                    print("The predicted age group is : {}".format(predicted_group))
             accuracy = total_correct_pred / (total_correct_pred+total_incorrect_pred)
-            print(f'The correct predictions are {total_correct_pred}')
-            print(f'The Incorrect predictions are {total_incorrect_pred}')
-            print(f'The accuracy of Age estimation model : {accuracy}')
+            print(f'Total correct predictions are {total_correct_pred}')
+            print(f'Total Incorrect predictions are {total_incorrect_pred}')
+            print(f'Accuracy of Age estimation model : {accuracy}')
