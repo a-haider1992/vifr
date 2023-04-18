@@ -361,7 +361,7 @@ class FR(BasicTask):
                 embedding, x_id, x_age = self.backbone(
                         image, return_age=True)
                 predicted_age, predicted_group = self.estimation_network(
-                        x_age)
+                        self.grl(x_id))
                 # print("The correct age tensor shape is : {}".format(age.shape))
                 # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
                 pred_group = 0
