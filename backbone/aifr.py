@@ -1,3 +1,5 @@
+from functools import partial
+import torch.nn as nn
 import torch.nn.functional as F
 import torch
 import tqdm
@@ -25,6 +27,67 @@ class SPPModule(nn.Module):
         xs = [block(x) for block in self.pool_blocks]
         x = torch.cat(xs, dim=1)
         x = x.view(x.size(0), x.size(1), 1, 1)
+        return x
+
+
+# Gender Feature Extractor
+class GenderFeatureExtractor(nn.Module):
+    def __init__(self):
+        super(GenderFeatureExtractor, self).__init__()
+
+        # Define convolutional layers
+        # self.conv1 = nn.Conv2d(
+        #     in_channels=3, out_channels=32, kernel_size=3, padding=1)
+        # self.conv2 = nn.Conv2d(
+        #     in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        # self.conv3 = nn.Conv2d(
+        #     in_channels=64, out_channels=128, kernel_size=3, padding=1)
+        # self.conv4 = nn.Conv2d(
+        #     in_channels=128, out_channels=256, kernel_size=3, padding=1)
+
+        # Define pooling layers
+        pool_size = (512, 512)
+        # self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        
+        self.pool = nn.AdaptiveMaxPool2d(pool_size)
+        self.bn = nn.BatchNorm2d(num_features=512)
+
+        # Define fully connected layers
+        # self.fc1 = nn.Linear(in_features=256 * 16 * 16, out_features=1024)
+        self.fc2 = nn.Linear(in_features=512 * 512, out_features=2)
+
+
+    def forward(self, x):
+        x = self.pool(x)
+        x= self.bn(x)
+
+        # Flatten output tensor for fully connected layers
+        x = x.view(-1, 512 * 512)
+
+        # # Pass input through fully connected layer
+        x = self.fc2(x)
+        return x
+
+# Ethinicty Classifier
+class EthnicityFeatureExtractor(nn.Module):
+    def __init__(self):
+        super(EthnicityFeatureExtractor, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3)
+        self.pool1 = nn.AdaptiveMaxPool2d((64, 64))
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
+        self.pool2 = nn.AdaptiveMaxPool2d((128, 128))
+        self.conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3)
+        self.pool3 = nn.AdaptiveMaxPool2d((512, 512))
+        # self.fc1 = nn.Linear(64 * 6 * 6, 128)
+        # self.fc2 = nn.Linear(128, 5)  # 5 possible ethnicities
+
+    def forward(self, x):
+        x = self.pool1(nn.functional.relu(self.conv1(x)))
+        x = self.pool2(nn.functional.relu(self.conv2(x)))
+        x = self.pool3(nn.functional.relu(self.conv3(x)))
+        # x = x.view(-1, 64 * 6 * 6)
+        # x = nn.functional.relu(self.fc1(x))
+        # x = self.fc2(x)
         return x
 
 
@@ -57,7 +120,8 @@ class AttentionModule(nn.Module):
         channel_input = self.avg_spp(x) + self.max_spp(x)
         channel_scale = self.channel(channel_input)
 
-        spatial_input = torch.cat((torch.max(x, 1)[0].unsqueeze(1), torch.mean(x, 1).unsqueeze(1)), dim=1)
+        spatial_input = torch.cat(
+            (torch.max(x, 1)[0].unsqueeze(1), torch.mean(x, 1).unsqueeze(1)), dim=1)
         spatial_scale = self.spatial(spatial_input)
 
         x_age = (x * channel_scale + x * spatial_scale) * 0.5
@@ -79,18 +143,43 @@ class AIResNet(IResNet):
             nn.BatchNorm1d(512))
         self._initialize_weights()
 
-    def forward(self, x, return_age=False, return_shortcuts=False):
+    def forward(self, x, return_age=False, return_gender=False, return_shortcuts=False):
         x_1 = self.input_layer(x)
         x_2 = self.block1(x_1)
         x_3 = self.block2(x_2)
         x_4 = self.block3(x_3)
         x_5 = self.block4(x_4)
+        # Id and age related features by Attention Module
         x_id, x_age = self.fsm(x_5)
+
+        # Gender features from Gender Module
+        # Upsample each tensor assuming tensors are of shape (batch_size, channels, width, height)
+        up_x_2 = F.interpolate(x_2, size=(512, 512), mode='bilinear', align_corners=True)
+        up_x_3 = F.interpolate(x_3, size=(512, 512), mode='bilinear', align_corners=True)
+        up_x_4 = F.interpolate(x_4, size=(512, 512), mode='bilinear', align_corners=True)
+
+        ## Concate along both width and height dimensions
+        concatenated_x = torch.cat([up_x_2, up_x_3, up_x_4, x_5], dim=2)
+        concatenated_x = torch.cat([concatenated_x, up_x_2, up_x_3, up_x_4, x_5], dim=3)
+
+        # Downsample the concatenated tensor for substraction
+        concatenated_x = F.interpolate(concatenated_x, size=(512, 512), mode='bicubic', align_corners=True)
+        # concatenated_x = F.interpolate(concatenated_x, size=(512, 512), mode='trilinear', align_corners=True)
+
+        # Approach 1
+        x_gender = concatenated_x - x_5
+        # Approach 2
+        # x_gender = x - x_5
+
+        # Embedding of image
         embedding = self.output_layer(x_id)
+        
         if return_shortcuts:
             return x_1, x_2, x_3, x_4, x_5, x_id, x_age
         if return_age:
             return embedding, x_id, x_age
+        if return_gender:
+            return embedding, x_id, x_age, x_gender
         return embedding
 
 
@@ -112,8 +201,6 @@ class AgeEstimationModule(nn.Module):
         x_group = self.group_output_layer(x_age)
         return x_age, x_group
 
-
-from functools import partial
 
 backbone_dict = {
     'ir34': partial(AIResNet, num_layers=[3, 4, 6, 3], mode="ir"),
