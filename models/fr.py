@@ -343,21 +343,32 @@ class FR(BasicTask):
             for _ in range(0, int(opt.evaluation_num_iter)):
                 image, age = self.prefetcher.next()
                 target_age = age.item()
-                target_group = 0
-                if target_age >= 10 and target_age <= 20:
-                    target_group = 1
-                elif target_age >= 20 and target_age <= 30:
-                    target_group = 2
-                elif target_age >= 30 and target_age <= 40:
-                    target_group = 3
-                elif target_age >= 40 and target_age <= 50:
-                    target_group = 4
-                elif target_age >=50 and target_age <=60:
-                    target_group = 5
-                elif target_age > 60:
-                    target_group = 6
-                elif target_age < 10:
+                if opt.age_group == 7:
                     target_group = 0
+                    if target_age >= 10 and target_age <= 20:
+                        target_group = 1
+                    elif target_age >= 20 and target_age <= 30:
+                        target_group = 2
+                    elif target_age >= 30 and target_age <= 40:
+                        target_group = 3
+                    elif target_age >= 40 and target_age <= 50:
+                        target_group = 4
+                    elif target_age >=50 and target_age <=60:
+                        target_group = 5
+                    elif target_age > 60:
+                        target_group = 6
+                    elif target_age < 10:
+                        target_group = 0
+                elif opt.age_group == 4:
+                    target_group = 0
+                    if target_age >= 30 and target_age <= 40:
+                        target_group = 1
+                    elif target_age >= 40 and target_age <= 50:
+                        target_group = 2
+                    elif target_age > 50:
+                        target_group = 3
+                    elif target_age < 30:
+                        target_group = 0
                 embedding, x_id, x_age = self.backbone(
                         image, return_age=True)
                 predicted_age, predicted_group = self.estimation_network(
