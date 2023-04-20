@@ -152,8 +152,19 @@ class AIResNet(IResNet):
         # Id and age related features by Attention Module
         x_id, x_age = self.fsm(x_5)
 
+        print(f'The shape of input image tensor:{x.shape}')
+        print(f'The shape of x_1 tensor:{x_1.shape}')
+        print(f'The shape of x_2 tensor:{x_2.shape}')
+        print(f'The shape of x_3 tensor:{x_3.shape}')
+        print(f'The shape of x_4 tensor:{x_4.shape}')
+        print(f'The shape of x_5 tensor:{x_5.shape}')
+
         # Gender features from Gender Module
         # Upsample each tensor assuming tensors are of shape (batch_size, channels, width, height)
+        assert x_2.ndim == 4, f"Expected tensor to have four dimensions, but got {x_2.ndim}"
+        assert x_3.ndim == 4, f"Expected tensor to have four dimensions, but got {x_3.ndim}"
+        assert x_4.ndim == 4, f"Expected tensor to have four dimensions, but got {x_4.ndim}"
+        assert x_5.ndim == 4, f"Expected tensor to have four dimensions, but got {x_5.ndim}"
         up_x_2 = F.interpolate(x_2, size=(512, 512), mode='bilinear', align_corners=True)
         up_x_3 = F.interpolate(x_3, size=(512, 512), mode='bilinear', align_corners=True)
         up_x_4 = F.interpolate(x_4, size=(512, 512), mode='bilinear', align_corners=True)
