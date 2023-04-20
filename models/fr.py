@@ -160,8 +160,8 @@ class FR(BasicTask):
                                         list(da_discriminator.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
         # if not opt.evaluation_only:
-        backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
-                                                                              da_discriminator)
+        backbone, head, estimation_network, da_discriminator, gender_estimation = convert_to_ddp(backbone, head, estimation_network,
+                                                                              da_discriminator, gender_estimation)
         # with open('VIT_keys_after_ddp.txt', 'w') as f:
         #         for key in estimation_network.state_dict().keys():
         #             f.write(key + '\n')
@@ -266,10 +266,9 @@ class FR(BasicTask):
             age_loss = self.compute_age_loss(x_age, x_group, ages)
             da_loss = self.forward_da(x_id, ages)
 
-            # gender
+            # Gender
             x_genders = self.gender_network(x_gender)
             gender_loss = F.cross_entropy(x_genders, genders)
-
 
             loss = id_loss + \
                 age_loss * opt.fr_age_loss_weight + \
