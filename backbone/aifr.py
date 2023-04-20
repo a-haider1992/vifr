@@ -206,7 +206,7 @@ class AIResNet(IResNet):
         concatenated_x = concatenated_x[:, :512, :, :]
         # concatenated_x = F.interpolate(concatenated_x, size=(512, 512), mode='trilinear', align_corners=True)
 
-        print(f'The final concatenated tensor shape:{concatenated_x.shape}')
+        # print(f'The final concatenated tensor shape:{concatenated_x.shape}')
 
         # Approach 1
         x_gender = concatenated_x - x_5
