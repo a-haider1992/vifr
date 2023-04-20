@@ -182,13 +182,13 @@ class AIResNet(IResNet):
         assert x_4.ndim == 4, f"Expected tensor to have four dimensions, but got {x_4.ndim}"
         assert x_5.ndim == 4, f"Expected tensor to have four dimensions, but got {x_5.ndim}"
 
-        _, up_x_5 = twinify_tensors(x_2, x_5)
-        _, up_x_4 = twinify_tensors(x_2, x_4)
-        _, up_x_3 = twinify_tensors(x_2, x_3)
+        # _, up_x_5 = twinify_tensors(x_2, x_5)
+        # _, up_x_4 = twinify_tensors(x_2, x_4)
+        # _, up_x_3 = twinify_tensors(x_2, x_3)
 
-        # up_x_5 = F.interpolate(x_5, size=(56, 56), mode='bilinear', align_corners=False)
-        # up_x_4 = F.interpolate(x_4, size=(56, 56), mode='bilinear', align_corners=False)
-        # up_x_3 = F.interpolate(x_3, size=(56, 56), mode='bilinear', align_corners=False)
+        up_x_5 = F.interpolate(x_5, size=(56, 56), mode='bilinear', align_corners=False)
+        up_x_4 = F.interpolate(x_4, size=(56, 56), mode='bilinear', align_corners=False)
+        up_x_3 = F.interpolate(x_3, size=(56, 56), mode='bilinear', align_corners=False)
 
         print('After padding/upsampling')
 
@@ -198,8 +198,8 @@ class AIResNet(IResNet):
 
         ## Concate along both width and height dimensions
         concatenated_x = torch.cat([x_2, up_x_3, up_x_4, up_x_5], dim=1)
-        concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=2)
-        concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=3)
+        # concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=2)
+        # concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=3)
 
         # Downsample the concatenated tensor for substraction
         concatenated_x = F.interpolate(concatenated_x, size=(7, 7), mode='bicubic', align_corners=False)
