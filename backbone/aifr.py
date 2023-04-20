@@ -131,6 +131,22 @@ class AttentionModule(nn.Module):
         return x_id, x_age
 
 
+def twinify_tensors(tensor1, tensor2):
+        if tensor1.shape[2:] != tensor2.shape[2:]:
+            h_diff = abs(tensor1.shape[2] - tensor2.shape[2])
+            w_diff = abs(tensor1.shape[3] - tensor2.shape[3])
+            if tensor1.shape[2] > tensor2.shape[2]:
+                tensor2 = torch.nn.functional.pad(tensor2, 
+                                                (0, 0, 0, 0, h_diff // 2, h_diff // 2 + 
+                                                h_diff % 2, w_diff // 2, w_diff // 2 + 
+                                                w_diff % 2))
+            else:
+                tensor1 = torch.nn.functional.pad(tensor1, 
+                                                (0, 0, 0, 0, h_diff // 2, h_diff // 2 + 
+                                                h_diff % 2, w_diff // 2, w_diff // 2 + 
+                                                w_diff % 2))
+            return tensor1, tensor2
+
 class AIResNet(IResNet):
     def __init__(self, input_size, num_layers, mode='ir', **kwargs):
         super(AIResNet, self).__init__(input_size, num_layers, mode)
@@ -165,27 +181,32 @@ class AIResNet(IResNet):
         assert x_3.ndim == 4, f"Expected tensor to have four dimensions, but got {x_3.ndim}"
         assert x_4.ndim == 4, f"Expected tensor to have four dimensions, but got {x_4.ndim}"
         assert x_5.ndim == 4, f"Expected tensor to have four dimensions, but got {x_5.ndim}"
-        up_x_5 = F.interpolate(x_5, size=(56, 56), mode='bilinear', align_corners=False)
-        up_x_4 = F.interpolate(x_4, size=(56, 56), mode='bilinear', align_corners=False)
-        up_x_3 = F.interpolate(x_3, size=(56, 56), mode='bilinear', align_corners=False)
 
-        print('After upsampling procedure')
+        _, up_x_5 = twinify_tensors(x_2, x_5)
+        _, up_x_4 = twinify_tensors(x_2, x_4)
+        _, up_x_3 = twinify_tensors(x_2, x_3)
 
-        print(f'The shape of x_1 tensor:{x_1.shape}')
-        print(f'The shape of x_2 tensor:{x_2.shape}')
+        # up_x_5 = F.interpolate(x_5, size=(56, 56), mode='bilinear', align_corners=False)
+        # up_x_4 = F.interpolate(x_4, size=(56, 56), mode='bilinear', align_corners=False)
+        # up_x_3 = F.interpolate(x_3, size=(56, 56), mode='bilinear', align_corners=False)
+
+        print('After padding/upsampling')
+
         print(f'The shape of x_3 tensor:{up_x_3.shape}')
         print(f'The shape of x_4 tensor:{up_x_4.shape}')
         print(f'The shape of x_5 tensor:{up_x_5.shape}')
 
         ## Concate along both width and height dimensions
-        concatenated_x = torch.cat([x_2, up_x_3, up_x_4, up_x_5], dim=2)
+        concatenated_x = torch.cat([x_2, up_x_3, up_x_4, up_x_5], dim=1)
+        concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=2)
         concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=3)
 
         # Downsample the concatenated tensor for substraction
         concatenated_x = F.interpolate(concatenated_x, size=(7, 7), mode='bicubic', align_corners=False)
+        concatenated_x = concatenated_x[:, :512, :, :]
         # concatenated_x = F.interpolate(concatenated_x, size=(512, 512), mode='trilinear', align_corners=True)
 
-        print(f'The concatenated tensor shape:{concatenated_x.shape}')
+        print(f'The final concatenated tensor shape:{concatenated_x.shape}')
 
         # Approach 1
         x_gender = concatenated_x - x_5
