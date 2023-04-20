@@ -168,12 +168,12 @@ class AIResNet(IResNet):
         # Id and age related features by Attention Module
         x_id, x_age = self.fsm(x_5)
 
-        print(f'The shape of input image tensor:{x.shape}')
-        print(f'The shape of x_1 tensor:{x_1.shape}')
-        print(f'The shape of x_2 tensor:{x_2.shape}')
-        print(f'The shape of x_3 tensor:{x_3.shape}')
-        print(f'The shape of x_4 tensor:{x_4.shape}')
-        print(f'The shape of x_5 tensor:{x_5.shape}')
+        # print(f'The shape of input image tensor:{x.shape}')
+        # print(f'The shape of x_1 tensor:{x_1.shape}')
+        # print(f'The shape of x_2 tensor:{x_2.shape}')
+        # print(f'The shape of x_3 tensor:{x_3.shape}')
+        # print(f'The shape of x_4 tensor:{x_4.shape}')
+        # print(f'The shape of x_5 tensor:{x_5.shape}')
 
         # Gender features from Gender Module
         # Upsample each tensor assuming tensors are of shape (batch_size, channels, width, height)
@@ -190,11 +190,11 @@ class AIResNet(IResNet):
         up_x_4 = F.interpolate(x_4, size=(56, 56), mode='bilinear', align_corners=False)
         up_x_3 = F.interpolate(x_3, size=(56, 56), mode='bilinear', align_corners=False)
 
-        print('After padding/upsampling')
+        # print('After padding/upsampling')
 
-        print(f'The shape of x_3 tensor:{up_x_3.shape}')
-        print(f'The shape of x_4 tensor:{up_x_4.shape}')
-        print(f'The shape of x_5 tensor:{up_x_5.shape}')
+        # print(f'The shape of x_3 tensor:{up_x_3.shape}')
+        # print(f'The shape of x_4 tensor:{up_x_4.shape}')
+        # print(f'The shape of x_5 tensor:{up_x_5.shape}')
 
         ## Concate along both width and height dimensions
         concatenated_x = torch.cat([x_2, up_x_3, up_x_4, up_x_5], dim=1)
