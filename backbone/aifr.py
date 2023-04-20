@@ -46,7 +46,7 @@ class GenderFeatureExtractor(nn.Module):
         #     in_channels=128, out_channels=256, kernel_size=3, padding=1)
 
         # Define pooling layers
-        pool_size = (512, 512)
+        pool_size = (7, 7)
         # self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
         
         self.pool = nn.AdaptiveMaxPool2d(pool_size)
@@ -54,7 +54,7 @@ class GenderFeatureExtractor(nn.Module):
 
         # Define fully connected layers
         # self.fc1 = nn.Linear(in_features=256 * 16 * 16, out_features=1024)
-        self.fc2 = nn.Linear(in_features=512 * 512, out_features=2)
+        self.fc2 = nn.Linear(in_features=512 * 7 * 7, out_features=2)
 
 
     def forward(self, x):
@@ -62,7 +62,7 @@ class GenderFeatureExtractor(nn.Module):
         x= self.bn(x)
 
         # Flatten output tensor for fully connected layers
-        x = x.view(-1, 512 * 512)
+        x = x.view(-1, 512 * 7 * 7)
 
         # # Pass input through fully connected layer
         x = self.fc2(x)
@@ -196,9 +196,11 @@ class AIResNet(IResNet):
         # print(f'The shape of x_4 tensor:{up_x_4.shape}')
         # print(f'The shape of x_5 tensor:{up_x_5.shape}')
 
-        ## Concate along both width and height dimensions
+        ## Concate along channels
         concatenated_x = torch.cat([x_2, up_x_3, up_x_4, up_x_5], dim=1)
+        # Concate along height
         # concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=2)
+        # Concate along width
         # concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=3)
 
         # Downsample the concatenated tensor for substraction

@@ -10,7 +10,7 @@ from common.ops import convert_to_ddp, get_dex_age, age2group, apply_weight_deca
 from common.grl import GradientReverseLayer
 from . import BasicTask
 from .td_block import ViT
-from backbone.aifr import backbone_dict, AgeEstimationModule
+from backbone.aifr import backbone_dict, AgeEstimationModule, GenderFeatureExtractor
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
 from common.datasetV2 import TrainDataset, EvaluationDataset
@@ -117,6 +117,8 @@ class FR(BasicTask):
         backbone = backbone_dict[opt.backbone_name](input_size=opt.image_size)
         head = CosFace(in_features=512, out_features=len(self.prefetcher.__loader__.dataset.classes),
                        s=opt.head_s, m=opt.head_m)
+        
+        gender_estimation = GenderFeatureExtractor()
 
         # if age estimation network to TD block VIT
         if opt.td_block:
@@ -169,6 +171,7 @@ class FR(BasicTask):
         self.backbone = backbone
         self.head = head
         self.estimation_network = estimation_network
+        self.gender_network = gender_estimation
         self.da_discriminator = da_discriminator
         self.grl = GradientReverseLayer()
         self.scaler = scaler
@@ -231,7 +234,7 @@ class FR(BasicTask):
                 x_id = x_id.float()
                 x_age = x_age.float()
             else:
-                embedding, x_id, x_age = self.backbone(images, return_age=True)
+                embedding, x_id, x_age, x_gender = self.backbone(images, return_age=True, return_gender=True)
 
         if opt.gfr:
             # Train GFR only
@@ -262,9 +265,15 @@ class FR(BasicTask):
             x_age, x_group = self.estimation_network(x_age)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
             da_loss = self.forward_da(x_id, ages)
+
+            # gender
+            x_genders = self.gender_network(x_gender)
+            gender_loss = F.cross_entropy(x_genders, genders)
+
+
             loss = id_loss + \
                 age_loss * opt.fr_age_loss_weight + \
-                da_loss * opt.fr_da_loss_weight
+                da_loss * opt.fr_da_loss_weight + gender_loss * 0.001
 
 
             # loss = id_loss + opt.fr_age_loss_weight * age_loss
@@ -274,7 +283,7 @@ class FR(BasicTask):
                 total_loss = self.scaler.scale(loss)
             self.optimizer.zero_grad()
             total_loss.backward()
-            apply_weight_decay(self.backbone, self.head, self.estimation_network,
+            apply_weight_decay(self.backbone, self.head, self.estimation_network, self.gender_network,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
             if opt.amp:
                 self.scaler.step(self.optimizer)
@@ -282,11 +291,11 @@ class FR(BasicTask):
             else:
                 self.optimizer.step()
 
-            id_loss, da_loss, age_loss = reduce_loss(
-                id_loss, da_loss, age_loss)
+            id_loss, da_loss, age_loss, gender_loss = reduce_loss(
+                id_loss, da_loss, age_loss, gender_loss)
             self.adjust_learning_rate(n_iter)
             lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
+            self.logger.msg([id_loss, da_loss, age_loss, gender_loss, lr], n_iter)
 
             # id_loss,  age_loss = reduce_loss(
             #     id_loss, age_loss)
