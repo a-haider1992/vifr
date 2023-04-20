@@ -170,12 +170,12 @@ class AIResNet(IResNet):
         up_x_3 = F.interpolate(x_3, size=(56, 56), mode='bilinear', align_corners=False)
 
         print('After upsampling procedure')
-        
+
         print(f'The shape of x_1 tensor:{x_1.shape}')
         print(f'The shape of x_2 tensor:{x_2.shape}')
-        print(f'The shape of x_3 tensor:{x_3.shape}')
-        print(f'The shape of x_4 tensor:{x_4.shape}')
-        print(f'The shape of x_5 tensor:{x_5.shape}')
+        print(f'The shape of x_3 tensor:{up_x_3.shape}')
+        print(f'The shape of x_4 tensor:{up_x_4.shape}')
+        print(f'The shape of x_5 tensor:{up_x_5.shape}')
 
         ## Concate along both width and height dimensions
         concatenated_x = torch.cat([x_2, up_x_3, up_x_4, up_x_5], dim=2)
