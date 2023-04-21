@@ -151,6 +151,7 @@ class AIResNet(IResNet):
     def __init__(self, input_size, num_layers, mode='ir', **kwargs):
         super(AIResNet, self).__init__(input_size, num_layers, mode)
         self.fsm = AttentionModule()
+        self.channel_reducer = torch.nn.Conv2d(in_channels=512+256+128+64, out_channels=512, kernel_size=1)
         self.output_layer = nn.Sequential(
             nn.BatchNorm2d(512),
             nn.Dropout(),
@@ -205,7 +206,9 @@ class AIResNet(IResNet):
 
         # Downsample the concatenated tensor for substraction
         concatenated_x = F.interpolate(concatenated_x, size=(7, 7), mode='bicubic', align_corners=False)
-        concatenated_x = concatenated_x[:, :512, :, :]
+        #  channel-wise pooling
+        concatenated_x = self.channel_reducer(concatenated_x)
+        # concatenated_x = concatenated_x[:, :512, :, :]
         # concatenated_x = F.interpolate(concatenated_x, size=(512, 512), mode='trilinear', align_corners=True)
 
         # print(f'The final concatenated tensor shape:{concatenated_x.shape}')

@@ -41,6 +41,9 @@ class MTLFace(object):
             if opt.age_pretrained_path is not None and dist.get_rank() == 0:
                 self.fr.estimation_network.load_state_dict(
                     torch.load(opt.age_pretrained_path))
+            if opt.gender_pretrained_path is not None and dist.get_rank() == 0:
+                self.fr.gender_network.load_state_dict(
+                    torch.load(opt.gender_pretrained_path))
             if not opt.evaluation_only and not opt.gfr:
                 self.fas = FAS(opt)
                 self.fas.set_loader()
@@ -72,6 +75,8 @@ class MTLFace(object):
                             help='id loss weight', type=float, default=0.0)
         parser.add_argument("--fr_age_loss_weight",
                             help='age loss weight', type=float, default=0.0)
+        parser.add_argument("--fr_gender_loss_weight",
+                            help='gender loss weight', type=float, default=0.0)
         parser.add_argument("--fr_da_loss_weight", help='cross age domain adaption loss weight', type=float,
                             default=0.0)
         parser.add_argument("--age_group", help='age_group',
@@ -149,6 +154,8 @@ class MTLFace(object):
                             help='id_pretrained_path', type=str)
         parser.add_argument("--age_pretrained_path",
                             help='age_pretrained_path', type=str)
+        parser.add_argument("--gender_pretrained_path",
+                            help='gender_pretrained_path', type=str)
 
         return parser
 
@@ -188,9 +195,11 @@ class MTLFace(object):
             root = os.path.dirname(__file__)
             PATH_BACKBONE = os.path.join(root, 'backbone.pt')
             PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model.pt')
+            PATH_GENDER_MODEL = os.path.join(root, 'gender_model.pt')
             torch.save(self.fr.backbone.state_dict(), PATH_BACKBONE)
             torch.save(self.fr.estimation_network.state_dict(),
                        PATH_AGE_ESTIMATION)
+            torch.save(self.fr.gender_network.state_dict(), PATH_GENDER_MODEL)
 
     def isSame(self, embed1, embed2):
         result = torch.eq(embed1, embed2)
