@@ -272,7 +272,7 @@ class FR(BasicTask):
 
             loss = id_loss + \
                 age_loss * opt.fr_age_loss_weight + \
-                da_loss * opt.fr_da_loss_weight + gender_loss * 0.001
+                da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight
 
 
             # loss = id_loss + opt.fr_age_loss_weight * age_loss
