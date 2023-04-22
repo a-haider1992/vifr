@@ -86,14 +86,15 @@ class FR(BasicTask):
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
             print("Loading AgeDB or UTK dataset..")
             agedb_transform = transforms.Compose([
-                transforms.CenterCrop([opt.image_size, opt.image_size]),
+                transforms.Resize([opt.image_size, opt.image_size]),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
 
             torch.cuda.empty_cache()
             age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
-            agedb_evaluation_dataset = EvaluationDataAge('agedb_test.csv', agedb_transform)
+            agedb_evaluation_dataset = EvaluationDataAge(
+                'agedb_test.csv', agedb_transform)
             weights = None
             sampler = RandomSampler(
                 age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
@@ -101,7 +102,8 @@ class FR(BasicTask):
                                                        batch_size=opt.batch_size,
                                                        sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
                                                        drop_last=True)
-            evaluation_loader = torch.utils.data.DataLoader(agedb_evaluation_dataset, batch_size=1, num_workers=opt.num_worker)
+            evaluation_loader = torch.utils.data.DataLoader(
+                agedb_evaluation_dataset, batch_size=1, num_workers=opt.num_worker)
 
         else:
             return Exception("Database doesn't exist.")
@@ -117,19 +119,20 @@ class FR(BasicTask):
         backbone = backbone_dict[opt.backbone_name](input_size=opt.image_size)
         head = CosFace(in_features=512, out_features=len(self.prefetcher.__loader__.dataset.classes),
                        s=opt.head_s, m=opt.head_m)
-        
+
         gender_estimation = GenderFeatureExtractor()
 
         # if age estimation network to TD block VIT
         if opt.td_block:
             da_discriminator = estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
-                                     hidden_features=opt.vit_hidden_f,
-                                     num_heads=opt.vit_heads, num_layers=opt.vit_blocks, age_group=opt.age_group)
+                                                        hidden_features=opt.vit_hidden_f,
+                                                        num_heads=opt.vit_heads, num_layers=opt.vit_blocks, age_group=opt.age_group)
             # estimation_network = PreTrainedVIT(image_size=opt.image_size)
             optimizer_new = torch.optim.Adam(list(backbone.parameters()) +
-                                        list(head.parameters()) +
-                                        list(estimation_network.parameters()),
-                                        lr=opt.learning_rate, betas=(opt.momentum, 0.999))
+                                             list(head.parameters()) +
+                                             list(
+                                                 estimation_network.parameters()),
+                                             lr=opt.learning_rate, betas=(opt.momentum, 0.999))
            # with open('VIT_keys.txt', 'w') as f:
             #     for key in estimation_network.state_dict().keys():
             #         f.write(key + '\n')
@@ -144,10 +147,11 @@ class FR(BasicTask):
                 input_size=opt.image_size, age_group=opt.age_group)
             da_discriminator = AgeEstimationModule(
                 input_size=opt.image_size, age_group=opt.age_group)
-            
+
         has_backbone_params = False
         if opt.gfr:
-            optimizer = torch.optim.Adam(list(estimation_network.parameters()), lr=0.001)
+            optimizer = torch.optim.Adam(
+                list(estimation_network.parameters()), lr=0.001)
             # Freeze all layers except last
             # last_layer_name = list(backbone.named_modules())[-1][0]
             # for name, param in backbone.named_parameters():
@@ -161,7 +165,7 @@ class FR(BasicTask):
                                         momentum=opt.momentum, lr=opt.learning_rate)
         # if not opt.evaluation_only:
         backbone, head, estimation_network, da_discriminator, gender_estimation = convert_to_ddp(backbone, head, estimation_network,
-                                                                              da_discriminator, gender_estimation)
+                                                                                                 da_discriminator, gender_estimation)
         # with open('VIT_keys_after_ddp.txt', 'w') as f:
         #         for key in estimation_network.state_dict().keys():
         #             f.write(key + '\n')
@@ -234,7 +238,8 @@ class FR(BasicTask):
                 x_id = x_id.float()
                 x_age = x_age.float()
             else:
-                embedding, x_id, x_age, x_gender = self.backbone(images, return_gender=True)
+                embedding, x_id, x_age, x_gender = self.backbone(
+                    images, return_gender=True)
 
         if opt.gfr:
             # Train GFR only
@@ -260,7 +265,6 @@ class FR(BasicTask):
             # if opt.td_block:
 
             # x_age, x_group = self.estimation_network(images)
-            
 
             x_age, x_group = self.estimation_network(x_age)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
@@ -273,7 +277,6 @@ class FR(BasicTask):
             loss = id_loss + \
                 age_loss * opt.fr_age_loss_weight + \
                 da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight
-
 
             # loss = id_loss + opt.fr_age_loss_weight * age_loss
             total_loss = loss
@@ -294,14 +297,15 @@ class FR(BasicTask):
                 id_loss, da_loss, age_loss, gender_loss)
             self.adjust_learning_rate(n_iter)
             lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg([id_loss, da_loss, age_loss, gender_loss, lr], n_iter)
+            self.logger.msg(
+                [id_loss, da_loss, age_loss, gender_loss, lr], n_iter)
 
             # id_loss,  age_loss = reduce_loss(
             #     id_loss, age_loss)
             # self.adjust_learning_rate(n_iter)
             # lr = self.optimizer.param_groups[0]['lr']
             # self.logger.msg([id_loss, age_loss, lr], n_iter)
-    
+
     def train_pretrained_eval(self):
         opt = self.opt
         # from sklearn.model_selection import KFold
@@ -323,7 +327,7 @@ class FR(BasicTask):
         #         train_dataset, batch_size=opt.eval_batch_size, shuffle=True)
         #     test_loader = torch.utils.data.DataLoader(
         #         test_dataset, batch_size=1, shuffle=False)
-            
+
         #     train_fetcher = DataPrefetcher(train_loader)
         #     test_fetcher = DataPrefetcher(test_loader)
         #     total_loss = 0.0
@@ -361,7 +365,7 @@ class FR(BasicTask):
                         target_group = 3
                     elif target_age >= 40 and target_age <= 50:
                         target_group = 4
-                    elif target_age >=50 and target_age <=60:
+                    elif target_age >= 50 and target_age <= 60:
                         target_group = 5
                     elif target_age > 60:
                         target_group = 6
@@ -378,9 +382,9 @@ class FR(BasicTask):
                     elif target_age < 30:
                         target_group = 0
                 embedding, x_id, x_age = self.backbone(
-                        image, return_age=True)
+                    image, return_age=True)
                 predicted_age, predicted_group = self.estimation_network(
-                        x_age)
+                    x_age)
                 # print("The correct age tensor shape is : {}".format(age.shape))
                 # print("The predicted age tensor shape is : {}".format(predicted_age.shape))
                 pred_group = 0
@@ -408,7 +412,8 @@ class FR(BasicTask):
                     print("The predicted age is : {}".format(pred_age))
                     print("The correct age group is : {}".format(target_group))
                     print("The predicted age group is : {}".format(predicted_group))
-            accuracy = total_correct_pred / (total_correct_pred+total_incorrect_pred)
+            accuracy = total_correct_pred / \
+                (total_correct_pred+total_incorrect_pred)
             print(f'Total correct predictions are {total_correct_pred}')
             print(f'Total Incorrect predictions are {total_incorrect_pred}')
             print(f'Accuracy of Age estimation model : {accuracy}')
