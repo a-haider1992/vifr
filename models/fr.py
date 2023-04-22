@@ -445,7 +445,7 @@ class FR(BasicTask):
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred +=1
-                    print(f'The predicted sex {predicted_sex.item()}')
+                    print(f'The predicted sex {predicted_sex}')
                     print(f'The actual sex {gender.item()}')
             accuracy = total_correct_pred / \
                 (total_correct_pred+total_incorrect_pred)
