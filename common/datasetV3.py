@@ -89,7 +89,7 @@ class AgeDB(tordata.Dataset):
 class UTK(tordata.Dataset):
     def __init__(self, file, transform=None):
         self.transform = transform
-        self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset')
+        self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'UTK')
         df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
         self.paths = df['path'].to_list()
         self.ages = df['age'].to_list()
