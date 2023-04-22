@@ -93,8 +93,8 @@ class FR(BasicTask):
 
             torch.cuda.empty_cache()
             age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
-            agedb_evaluation_dataset = EvaluationDataAge(
-                'agedb_test.csv', agedb_transform)
+            # agedb_evaluation_dataset = EvaluationDataAge(
+            #     'agedb_test.csv', agedb_transform)
             weights = None
             sampler = RandomSampler(
                 age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
@@ -102,8 +102,8 @@ class FR(BasicTask):
                                                        batch_size=opt.batch_size,
                                                        sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
                                                        drop_last=True)
-            evaluation_loader = torch.utils.data.DataLoader(
-                agedb_evaluation_dataset, batch_size=1, num_workers=opt.num_worker)
+            # evaluation_loader = torch.utils.data.DataLoader(
+            #     agedb_evaluation_dataset, batch_size=1, num_workers=opt.num_worker)
 
         else:
             return Exception("Database doesn't exist.")
