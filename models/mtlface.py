@@ -138,6 +138,8 @@ class MTLFace(object):
                             help='Batch size of evaluation', default=1, type=int)
         parser.add_argument(
             "--evaluation_only", help='Evaluate the trained models', action='store_true')
+        parser.add_argument(
+            "--fine_tune", help='Fine tune the pre-trained models', action='store_true')
 
         # FAS
         parser.add_argument("--d_lr", help='learning-rate',
@@ -193,13 +195,18 @@ class MTLFace(object):
         opt = self.opt
         if dist.get_rank() == 0:
             root = os.path.dirname(__file__)
-            PATH_BACKBONE = os.path.join(root, 'backbone.pt')
-            PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model.pt')
-            PATH_GENDER_MODEL = os.path.join(root, 'gender_model.pt')
-            torch.save(self.fr.backbone.state_dict(), PATH_BACKBONE)
-            torch.save(self.fr.estimation_network.state_dict(),
-                       PATH_AGE_ESTIMATION)
-            torch.save(self.fr.gender_network.state_dict(), PATH_GENDER_MODEL)
+            if opt.fine_tune:
+                PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model_fine_tuned.pt')
+                torch.save(self.fr.estimation_network.state_dict(),
+                        PATH_AGE_ESTIMATION)
+            else:
+                PATH_BACKBONE = os.path.join(root, 'backbone.pt')
+                PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model.pt')
+                PATH_GENDER_MODEL = os.path.join(root, 'gender_model.pt')
+                torch.save(self.fr.backbone.state_dict(), PATH_BACKBONE)
+                torch.save(self.fr.estimation_network.state_dict(),
+                        PATH_AGE_ESTIMATION)
+                torch.save(self.fr.gender_network.state_dict(), PATH_GENDER_MODEL)
 
     def isSame(self, embed1, embed2):
         result = torch.eq(embed1, embed2)
@@ -210,7 +217,10 @@ class MTLFace(object):
             return False
 
     def evaluate_age_estimation(self):
-        self.fr.train_pretrained_eval()
+        self.fr.age_pretrained_eval()
+
+    def evaluate_gender_estimation(self):
+        self.fr.evaluate_gender_model()
 
     def evaluate_mtlface(self):
         # evaluate trained model

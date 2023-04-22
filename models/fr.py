@@ -14,7 +14,7 @@ from backbone.aifr import backbone_dict, AgeEstimationModule, GenderFeatureExtra
 from head.cosface import CosFace
 from common.dataset import TrainImageDataset, EvaluationImageDataset
 from common.datasetV2 import TrainDataset, EvaluationDataset
-from common.datasetV3 import TrainingData, EvaluationData, TrainingDataAge, EvaluationDataAge
+from common.datasetV3 import TrainingData, EvaluationData, TrainingDataAge, EvaluationDataAge, UTK
 import pdb
 
 
@@ -90,20 +90,29 @@ class FR(BasicTask):
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
             ])
-
-            torch.cuda.empty_cache()
-            age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
-            # agedb_evaluation_dataset = EvaluationDataAge(
-            #     'agedb_test.csv', agedb_transform)
-            weights = None
-            sampler = RandomSampler(
-                age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
-            train_loader = torch.utils.data.DataLoader(age_db_dataset,
-                                                       batch_size=opt.batch_size,
-                                                       sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
-                                                       drop_last=True)
-            # evaluation_loader = torch.utils.data.DataLoader(
-            #     agedb_evaluation_dataset, batch_size=1, num_workers=opt.num_worker)
+            if opt.dataset_name == "AgeDB":
+                torch.cuda.empty_cache()
+                age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
+                # agedb_evaluation_dataset = EvaluationDataAge(
+                #     'agedb_test.csv', agedb_transform)
+                weights = None
+                sampler = RandomSampler(
+                    age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
+                train_loader = torch.utils.data.DataLoader(age_db_dataset,
+                                                        batch_size=opt.batch_size,
+                                                        sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
+                                                        drop_last=True)
+                # evaluation_loader = torch.utils.data.DataLoader(
+                #     agedb_evaluation_dataset, batch_size=1, num_workers=opt.num_worker)
+            else:
+                utk_dataset = UTK('UTK.csv', agedb_transform)
+                weights = None
+                sampler = RandomSampler(
+                    utk_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
+                train_loader = torch.utils.data.DataLoader(utk_dataset,
+                                                        batch_size=opt.batch_size,
+                                                        sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
+                                                        drop_last=True)
 
         else:
             return Exception("Database doesn't exist.")
@@ -306,7 +315,7 @@ class FR(BasicTask):
             # lr = self.optimizer.param_groups[0]['lr']
             # self.logger.msg([id_loss, age_loss, lr], n_iter)
 
-    def train_pretrained_eval(self):
+    def age_pretrained_eval(self):
         opt = self.opt
         # from sklearn.model_selection import KFold
         # # 10-fold cross-validation here
@@ -412,6 +421,31 @@ class FR(BasicTask):
                     print("The predicted age is : {}".format(pred_age))
                     print("The correct age group is : {}".format(target_group))
                     print("The predicted age group is : {}".format(predicted_group))
+            accuracy = total_correct_pred / \
+                (total_correct_pred+total_incorrect_pred)
+            print(f'Total correct predictions are {total_correct_pred}')
+            print(f'Total Incorrect predictions are {total_incorrect_pred}')
+            print(f'Accuracy of Age estimation model : {accuracy}')
+    
+    def evaluate_gender_model(self):
+        opt = self.opt
+        print("Age Estimation Model under evaluation.")
+        self.estimation_network.eval()
+        self.backbone.eval()
+        total_correct_pred = 0
+        total_incorrect_pred = 0
+        with torch.no_grad():
+            for _ in range(0, int(opt.evaluation_num_iter)):
+                image, age, gender = self.prefetcher.next()
+                embedding, x_id, x_age, x_gender = self.backbone(
+                    image, return_gender=True)
+                predicted_sex = self.gender_network(x_gender)
+                if predicted_sex.item() == gender.item():
+                    total_correct_pred += 1
+                else:
+                    total_incorrect_pred +=1
+                    print(f'The predicted sex {predicted_sex.item()}')
+                    print(f'The actual sex {gender.item()}')
             accuracy = total_correct_pred / \
                 (total_correct_pred+total_incorrect_pred)
             print(f'Total correct predictions are {total_correct_pred}')
