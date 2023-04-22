@@ -429,8 +429,8 @@ class FR(BasicTask):
     
     def evaluate_gender_model(self):
         opt = self.opt
-        print("Age Estimation Model under evaluation.")
-        self.estimation_network.eval()
+        print("Gender Estimation Model under evaluation.")
+        self.gender_network.eval()
         self.backbone.eval()
         total_correct_pred = 0
         total_incorrect_pred = 0
