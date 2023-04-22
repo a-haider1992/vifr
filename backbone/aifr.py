@@ -214,9 +214,7 @@ class AIResNet(IResNet):
         # print(f'The final concatenated tensor shape:{concatenated_x.shape}')
 
         # Approach 1
-        print(f'The id shape : {x_id.shape}')
-        print(f'The age shape : {x_age.shape}')
-        x_gender = concatenated_x - x_5
+        x_gender = concatenated_x - (x_age + x_id)
         # Approach 2
         # x_gender = x - x_5
 
