@@ -440,7 +440,8 @@ class FR(BasicTask):
                 embedding, x_id, x_age, x_gender = self.backbone(
                     image, return_gender=True)
                 predicted_sex = self.gender_network(x_gender)
-                if predicted_sex.item() == gender.item():
+                predicted_sex = torch.argmax(predicted_sex).item()
+                if predicted_sex == gender.item():
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred +=1
