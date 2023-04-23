@@ -71,8 +71,8 @@ class AgeDB(tordata.Dataset):
         self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'AgeDB')
         df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
         self.data = df.values
-        self.paths = self.data[: 0]
-        self.ages = self.data[: 1].astype(np.float32)
+        self.paths = df['path'].to_list()
+        self.ages = df['age'].astype(np.float32).to_list()
         self.images = []
         self.classes = self.paths
         for path in self.paths:
