@@ -6,6 +6,7 @@ import os.path as osp
 import os
 import pandas
 from torchvision.datasets.folder import pil_loader
+import numpy as np
 
 def find_image_paths(images, image_num1, image_num2):
     for image in images:
@@ -69,8 +70,9 @@ class AgeDB(tordata.Dataset):
         self.transform = transform
         self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'AgeDB')
         df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
-        self.paths = df['path'].to_list()
-        self.ages = df['age'].apply(float).to_list()
+        self.data = df.values
+        self.paths = self.data[: 0]
+        self.ages = self.data[: 1].astype(np.float32)
         self.images = []
         self.classes = self.paths
         for path in self.paths:

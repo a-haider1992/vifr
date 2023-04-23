@@ -86,6 +86,7 @@ class FR(BasicTask):
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
             print("Loading AgeDB or UTK dataset..")
             agedb_transform = transforms.Compose([
+                transforms.RandomHorizontalFlip(),
                 transforms.Resize([opt.image_size, opt.image_size]),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5, ], std=[0.5, ])
@@ -228,7 +229,7 @@ class FR(BasicTask):
             # AgeDB
             # A pre-trained backbone is used
             self.estimation_network.train()
-            self.backbone.train()
+            self.backbone.eval()
             images, ages = inputs
             if opt.amp:
                 with amp.autocast():
@@ -260,10 +261,10 @@ class FR(BasicTask):
         if opt.gfr:
             # Train GFR only
             x_age, x_group = self.estimation_network(x_age)
-            # out = get_dex_age(x_age)
-            # print(out)
-            # print("-------------------------------------")
-            # print(ages)
+            out = get_dex_age(x_age)
+            print(out)
+            print("-------------------------------------")
+            print(ages)
             # age_loss = F.mse_loss(torch.round(out * 10) / 10, ages)
             # age_group_loss = F.cross_entropy(x_group, age2group(
             #     ages, age_group=opt.age_group).long())
@@ -298,11 +299,6 @@ class FR(BasicTask):
             x_age, x_group = self.estimation_network(x_age)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
             da_loss = self.forward_da(x_id, ages)
-
-            out = get_dex_age(x_age)
-            print(out)
-            print("-------------------------------------")
-            print(ages)
 
             # Gender
             x_genders = self.gender_network(x_gender)
