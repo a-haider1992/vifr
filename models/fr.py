@@ -257,8 +257,9 @@ class FR(BasicTask):
             da_loss = self.forward_da(x_id, ages)
             loss = age_loss * opt.fr_age_loss_weight + \
                 da_loss * opt.fr_da_loss_weight
+            total_loss = loss.float()
             self.optimizer.zero_grad()
-            loss.backward()
+            total_loss.backward()
             self.optimizer.step()
             apply_weight_decay(self.estimation_network, self.da_discriminator,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
