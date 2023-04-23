@@ -231,7 +231,15 @@ class FR(BasicTask):
             self.estimation_network.train()
             self.backbone.eval()
             images, ages = inputs
-            embedding, x_id, x_age = self.backbone(images, return_age=True)
+            if opt.amp:
+                with amp.autocast():
+                    embedding, x_id, x_age = self.backbone(
+                        images, return_age=True)
+                embedding = embedding.float()
+                x_id = x_id.float()
+                x_age = x_age.float()
+            else:
+                embedding, x_id, x_age = self.backbone(images, return_age=True)
         else:
             # For casia-webface type datasets
             self.head.train()
@@ -254,15 +262,21 @@ class FR(BasicTask):
             # Train GFR only
             x_age, x_group = self.estimation_network(x_age)
             age_loss = F.mse_loss(get_dex_age(x_age), ages)
-            age_group_loss = F.cross_entropy(x_group, age2group(
-                ages, age_group=opt.age_group).long())
+            # age_group_loss = F.cross_entropy(x_group, age2group(
+            #     ages, age_group=opt.age_group).long())
             # age_loss = self.compute_age_loss(x_age, x_group, ages)
             # da_loss = self.forward_da(x_id, ages)
             # loss = age_loss * opt.fr_age_loss_weight + \
             #     da_loss * opt.fr_da_loss_weight
+            if opt.amp:
+                age_loss = self.scaler.scale(age_loss)
             self.optimizer.zero_grad()
             age_loss.backward()
-            self.optimizer.step()
+            if opt.amp:
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
+            else:
+                self.optimizer.step()
             apply_weight_decay(self.estimation_network,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
             # age_loss = reduce_loss(age_loss)
