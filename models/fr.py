@@ -229,17 +229,9 @@ class FR(BasicTask):
             # AgeDB
             # A pre-trained backbone is used
             self.estimation_network.train()
-            self.backbone.eval()
+            self.backbone.train()
             images, ages = inputs
-            if opt.amp:
-                with amp.autocast():
-                    embedding, x_id, x_age = self.backbone(
-                        images, return_age=True)
-                embedding = embedding.float()
-                x_id = x_id.float()
-                x_age = x_age.float()
-            else:
-                embedding, x_id, x_age = self.backbone(images, return_age=True)
+            embedding, x_id, x_age = self.backbone(images, return_age=True)
         else:
             # For casia-webface type datasets
             self.head.train()
