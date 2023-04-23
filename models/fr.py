@@ -159,15 +159,11 @@ class FR(BasicTask):
             da_discriminator = AgeEstimationModule(
                 input_size=opt.image_size, age_group=opt.age_group)
 
-        has_backbone_params = False
         if opt.gfr:
-            optimizer = torch.optim.Adam(list(backbone.parameters()) +
-                                         list(estimation_network.parameters()), lr=0.001)
-            # Freeze all layers except last
-            # last_layer_name = list(backbone.named_modules())[-1][0]
-            # for name, param in backbone.named_parameters():
-            #     if last_layer_name is not name:   # Skip the last layer
-            #         param.requires_grad = False
+            optimizer = torch.optim.SGD(list(backbone.parameters()) +
+                                        list(estimation_network.parameters()) +
+                                        list(da_discriminator.parameters()),
+                                        momentum=opt.momentum, lr=opt.learning_rate)
         else:
             optimizer = torch.optim.SGD(list(backbone.parameters()) +
                                         list(head.parameters()) +
@@ -227,6 +223,7 @@ class FR(BasicTask):
         opt = self.opt
         self.backbone.train()
         self.estimation_network.train()
+        self.da_discriminator.train()
 
         if opt.gfr:
             # AgeDB
@@ -237,8 +234,6 @@ class FR(BasicTask):
             # For scaf
             self.head.train()
             images, labels, ages, genders = inputs
-            self.da_discriminator.train()
-            self.estimation_network.train()
 
         if opt.amp:
             with amp.autocast():
@@ -259,18 +254,18 @@ class FR(BasicTask):
             # print("-------------------------------------")
             # print(ages)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
-            # da_loss = self.forward_da(x_id, ages)
-            # loss = age_loss * opt.fr_age_loss_weight + \
-            #     da_loss * opt.fr_da_loss_weight
+            da_loss = self.forward_da(x_id, ages)
+            loss = age_loss * opt.fr_age_loss_weight + \
+                da_loss * opt.fr_da_loss_weight
             self.optimizer.zero_grad()
-            age_loss.backward()
+            loss.backward()
             self.optimizer.step()
             apply_weight_decay(self.estimation_network,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
-            age_loss = reduce_loss(age_loss)
+            age_loss, da_loss = reduce_loss(age_loss, da_loss)
             self.adjust_learning_rate(n_iter)
             lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg([age_loss, lr], n_iter)
+            self.logger.msg([age_loss, da_loss, lr], n_iter)
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
