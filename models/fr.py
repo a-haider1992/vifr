@@ -254,19 +254,18 @@ class FR(BasicTask):
             # Train GFR only
             x_age, x_group = self.estimation_network(x_age)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
-            da_loss = self.forward_da(x_id, ages)
-            loss = age_loss * opt.fr_age_loss_weight + \
-                da_loss * opt.fr_da_loss_weight
-            total_loss = loss.float()
+            # da_loss = self.forward_da(x_id, ages)
+            # loss = age_loss * opt.fr_age_loss_weight + \
+            #     da_loss * opt.fr_da_loss_weight
             self.optimizer.zero_grad()
-            total_loss.backward()
+            age_loss.backward()
             self.optimizer.step()
-            apply_weight_decay(self.estimation_network, self.da_discriminator,
+            apply_weight_decay(self.estimation_network,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
-            age_loss, da_loss = reduce_loss(age_loss, da_loss)
+            # age_loss = reduce_loss(age_loss)
             # self.adjust_learning_rate(n_iter)
             # lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg([age_loss, da_loss, lr], n_iter)
+            self.logger.msg([age_loss, lr], n_iter)
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
