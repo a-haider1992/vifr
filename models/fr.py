@@ -92,7 +92,7 @@ class FR(BasicTask):
             ])
             if opt.dataset_name == "AgeDB":
                 torch.cuda.empty_cache()
-                age_db_dataset = TrainingDataAge('AgeDB.csv', agedb_transform)
+                age_db_dataset = TrainingDataAge('agedb_train.csv', agedb_transform)
                 # agedb_evaluation_dataset = EvaluationDataAge(
                 #     'agedb_test.csv', agedb_transform)
                 weights = None
@@ -260,7 +260,7 @@ class FR(BasicTask):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            apply_weight_decay(self.head,
+            apply_weight_decay(self.estimation_network, self.da_discriminator,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
             age_loss, da_loss = reduce_loss(age_loss, da_loss)
             # self.adjust_learning_rate(n_iter)

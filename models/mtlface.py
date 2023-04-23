@@ -195,7 +195,7 @@ class MTLFace(object):
         opt = self.opt
         if dist.get_rank() == 0:
             root = os.path.dirname(__file__)
-            if opt.fine_tune:
+            if opt.gfr:
                 PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model_fine_tuned.pt')
                 torch.save(self.fr.estimation_network.state_dict(),
                         PATH_AGE_ESTIMATION)
