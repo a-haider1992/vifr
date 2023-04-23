@@ -265,8 +265,8 @@ class FR(BasicTask):
             # print(f'The dex output shape is {get_dex_age(x_age).shape}')
             # print(f'True age tensor shape is {ages.shape}')
             out = get_dex_age(x_age)
-            print(f'Type of first element of dex output tensor {type(out[0])}')
-            print(f'Type of first element of ages tensor {type(ages[0])}')
+            print(f'first element of dex output tensor {out[0]}')
+            print(f'first element of ages tensor {ages[0]}')
             age_loss = F.mse_loss(get_dex_age(x_age), ages)
             # age_group_loss = F.cross_entropy(x_group, age2group(
             #     ages, age_group=opt.age_group).long())
