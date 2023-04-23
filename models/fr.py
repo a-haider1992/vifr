@@ -228,7 +228,7 @@ class FR(BasicTask):
             # AgeDB
             # A pre-trained backbone is used
             self.estimation_network.train()
-            self.backbone.eval()
+            self.backbone.train()
             images, ages = inputs
             if opt.amp:
                 with amp.autocast():
