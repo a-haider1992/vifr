@@ -261,32 +261,23 @@ class FR(BasicTask):
         if opt.gfr:
             # Train GFR only
             x_age, x_group = self.estimation_network(x_age)
-            out = get_dex_age(x_age)
-            print(out)
-            print("-------------------------------------")
-            print(ages)
-            # age_loss = F.mse_loss(torch.round(out * 10) / 10, ages)
-            # age_group_loss = F.cross_entropy(x_group, age2group(
-            #     ages, age_group=opt.age_group).long())
+            # out = get_dex_age(x_age)
+            # print(out)
+            # print("-------------------------------------")
+            # print(ages)
             age_loss = self.compute_age_loss(x_age, x_group, ages)
             # da_loss = self.forward_da(x_id, ages)
             # loss = age_loss * opt.fr_age_loss_weight + \
             #     da_loss * opt.fr_da_loss_weight
-            if opt.amp:
-                age_loss = self.scaler.scale(age_loss)
             self.optimizer.zero_grad()
             age_loss.backward()
-            if opt.amp:
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
-            else:
-                self.optimizer.step()
+            self.optimizer.step()
             apply_weight_decay(self.estimation_network,
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
-            # age_loss = reduce_loss(age_loss)
-            # self.adjust_learning_rate(n_iter)
-            # lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg([age_loss], n_iter)
+            age_loss = reduce_loss(age_loss)
+            self.adjust_learning_rate(n_iter)
+            lr = self.optimizer.param_groups[0]['lr']
+            self.logger.msg([age_loss, lr], n_iter)
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
