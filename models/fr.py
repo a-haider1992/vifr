@@ -260,19 +260,14 @@ class FR(BasicTask):
         if opt.gfr:
             # Train GFR only
             x_age, x_group = self.estimation_network(x_age)
-            max_age_values, _ = torch.max(x_age, dim=1)
-            predicted_ages = max_age_values.flatten()
-            age_loss = F.mse_loss(predicted_ages, ages)
-            # print(f'The x_age shape is {x_age.shape}')
-            # print(f'The dex output shape is {get_dex_age(x_age).shape}')
-            # print(f'True age tensor shape is {ages.shape}')
-            # out = get_dex_age(x_age)
-            # print(f'first element of dex output tensor {torch.round(out[0] * 10) / 10}')
-            # print(f'first element of ages tensor {ages[0]}')
+            out = get_dex_age(x_age)
+            print(out)
+            print("-------------------------------------")
+            print(ages)
             # age_loss = F.mse_loss(torch.round(out * 10) / 10, ages)
             # age_group_loss = F.cross_entropy(x_group, age2group(
             #     ages, age_group=opt.age_group).long())
-            # age_loss = self.compute_age_loss(x_age, x_group, ages)
+            age_loss = self.compute_age_loss(x_age, x_group, ages)
             # da_loss = self.forward_da(x_id, ages)
             # loss = age_loss * opt.fr_age_loss_weight + \
             #     da_loss * opt.fr_da_loss_weight
