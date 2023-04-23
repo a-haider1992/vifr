@@ -299,6 +299,11 @@ class FR(BasicTask):
             age_loss = self.compute_age_loss(x_age, x_group, ages)
             da_loss = self.forward_da(x_id, ages)
 
+            out = get_dex_age(x_age)
+            print(out)
+            print("-------------------------------------")
+            print(ages)
+
             # Gender
             x_genders = self.gender_network(x_gender)
             gender_loss = F.cross_entropy(x_genders, genders)
