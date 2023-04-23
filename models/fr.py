@@ -260,10 +260,10 @@ class FR(BasicTask):
         if opt.gfr:
             # Train GFR only
             x_age, x_group = self.estimation_network(x_age)
-            out = get_dex_age(x_age)
-            print(out)
-            print("-------------------------------------")
-            print(ages)
+            # out = get_dex_age(x_age)
+            # print(out)
+            # print("-------------------------------------")
+            # print(ages)
             # age_loss = F.mse_loss(torch.round(out * 10) / 10, ages)
             # age_group_loss = F.cross_entropy(x_group, age2group(
             #     ages, age_group=opt.age_group).long())
