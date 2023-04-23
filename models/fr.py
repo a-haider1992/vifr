@@ -225,31 +225,31 @@ class FR(BasicTask):
 
     def train(self, inputs, n_iter):
         opt = self.opt
+        self.backbone.train()
+        self.estimation_network.train()
 
         if opt.gfr:
             # AgeDB
             # A pre-trained backbone is used
-            self.estimation_network.train()
-            self.backbone.train()
             images, ages = inputs
-            embedding, x_id, x_age = self.backbone(images, return_age=True)
+            # embedding, x_id, x_age = self.backbone(images, return_age=True)
         else:
-            # For casia-webface type datasets
+            # For scaf
             self.head.train()
-            self.backbone.train()
             images, labels, ages, genders = inputs
             self.da_discriminator.train()
             self.estimation_network.train()
-            if opt.amp:
-                with amp.autocast():
-                    embedding, x_id, x_age = self.backbone(
-                        images, return_age=True)
-                embedding = embedding.float()
-                x_id = x_id.float()
-                x_age = x_age.float()
-            else:
-                embedding, x_id, x_age, x_gender = self.backbone(
-                    images, return_gender=True)
+
+        if opt.amp:
+            with amp.autocast():
+                embedding, x_id, x_age = self.backbone(
+                    images, return_age=True)
+            embedding = embedding.float()
+            x_id = x_id.float()
+            x_age = x_age.float()
+        else:
+            embedding, x_id, x_age, x_gender = self.backbone(
+                images, return_gender=True)
 
         if opt.gfr:
             # Train GFR only
