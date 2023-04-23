@@ -73,7 +73,7 @@ class AgeDB(tordata.Dataset):
         self.data = df.values
         self.ages = self.data[:, 1].astype(np.float32)
         self.images = np.array([osp.join(self.root, x) for x in self.data[:, 0]])
-        self.classes = self.paths
+        self.classes = self.data[:, 0]
         # self.images = []
         # for path in self.paths:
         #     path = os.path.join(self.root, path)
