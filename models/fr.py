@@ -286,7 +286,7 @@ class FR(BasicTask):
             # age_loss = reduce_loss(age_loss)
             # self.adjust_learning_rate(n_iter)
             # lr = self.optimizer.param_groups[0]['lr']
-            self.logger.msg([age_loss, lr], n_iter)
+            self.logger.msg([age_loss], n_iter)
         else:
             # Train Face Recognition with ages and genders
             id_loss = F.cross_entropy(self.head(embedding, labels), labels)
