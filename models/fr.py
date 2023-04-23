@@ -253,7 +253,10 @@ class FR(BasicTask):
         if opt.gfr:
             # Train GFR only
             x_age, x_group = self.estimation_network(x_age)
-            age_loss = self.compute_age_loss(x_age, x_group, ages)
+            age_loss = F.mse_loss(x_age, ages)
+            age_group_loss = F.cross_entropy(x_group, age2group(
+                ages, age_group=opt.age_group).long())
+            # age_loss = self.compute_age_loss(x_age, x_group, ages)
             # da_loss = self.forward_da(x_id, ages)
             # loss = age_loss * opt.fr_age_loss_weight + \
             #     da_loss * opt.fr_da_loss_weight
