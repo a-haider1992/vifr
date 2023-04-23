@@ -93,16 +93,17 @@ class FR(BasicTask):
             ])
             if opt.dataset_name == "AgeDB":
                 torch.cuda.empty_cache()
-                age_db_dataset = TrainingDataAge('agedb_train.csv', agedb_transform)
+                age_db_dataset = TrainingDataAge(
+                    'agedb_train.csv', agedb_transform)
                 # agedb_evaluation_dataset = EvaluationDataAge(
                 #     'agedb_test.csv', agedb_transform)
                 weights = None
                 sampler = RandomSampler(
                     age_db_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
                 train_loader = torch.utils.data.DataLoader(age_db_dataset,
-                                                        batch_size=opt.batch_size,
-                                                        sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
-                                                        drop_last=True)
+                                                           batch_size=opt.batch_size,
+                                                           sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
+                                                           drop_last=True)
                 # evaluation_loader = torch.utils.data.DataLoader(
                 #     agedb_evaluation_dataset, batch_size=1, num_workers=opt.num_worker)
             else:
@@ -111,9 +112,9 @@ class FR(BasicTask):
                 sampler = RandomSampler(
                     utk_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
                 train_loader = torch.utils.data.DataLoader(utk_dataset,
-                                                        batch_size=opt.batch_size,
-                                                        sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
-                                                        drop_last=True)
+                                                           batch_size=opt.batch_size,
+                                                           sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
+                                                           drop_last=True)
 
         else:
             return Exception("Database doesn't exist.")
@@ -160,8 +161,8 @@ class FR(BasicTask):
 
         has_backbone_params = False
         if opt.gfr:
-            optimizer = torch.optim.Adam(
-                list(estimation_network.parameters()), lr=0.001)
+            optimizer = torch.optim.Adam(list(backbone.parameters()) +
+                                         list(estimation_network.parameters()), lr=0.001)
             # Freeze all layers except last
             # last_layer_name = list(backbone.named_modules())[-1][0]
             # for name, param in backbone.named_parameters():
@@ -430,7 +431,7 @@ class FR(BasicTask):
             print(f'Total correct predictions are {total_correct_pred}')
             print(f'Total Incorrect predictions are {total_incorrect_pred}')
             print(f'Accuracy of Age estimation model : {accuracy}')
-    
+
     def evaluate_gender_model(self):
         opt = self.opt
         print("Gender Estimation Model under evaluation.")
@@ -448,7 +449,7 @@ class FR(BasicTask):
                 if predicted_sex == gender.item():
                     total_correct_pred += 1
                 else:
-                    total_incorrect_pred +=1
+                    total_incorrect_pred += 1
                     print(f'The predicted sex {predicted_sex}')
                     print(f'The actual sex {gender.item()}')
             accuracy = total_correct_pred / \
