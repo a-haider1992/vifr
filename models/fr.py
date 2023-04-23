@@ -267,7 +267,7 @@ class FR(BasicTask):
             out = get_dex_age(x_age)
             print(f'first element of dex output tensor {torch.round(out[0] * 10) / 10}')
             print(f'first element of ages tensor {ages[0]}')
-            age_loss = F.mse_loss(get_dex_age(x_age), ages)
+            age_loss = F.mse_loss(torch.round(out * 10) / 10, ages)
             # age_group_loss = F.cross_entropy(x_group, age2group(
             #     ages, age_group=opt.age_group).long())
             # age_loss = self.compute_age_loss(x_age, x_group, ages)
