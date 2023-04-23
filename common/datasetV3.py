@@ -71,13 +71,13 @@ class AgeDB(tordata.Dataset):
         self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'AgeDB')
         df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
         self.data = df.values
-        self.paths = self.data[:, 0]
         self.ages = self.data[:, 1].astype(np.float32)
-        self.images = []
+        self.images = np.array([osp.join(self.root, x) for x in self.data[:, 0]])
         self.classes = self.paths
-        for path in self.paths:
-            path = os.path.join(self.root, path)
-            self.images.append(path)
+        # self.images = []
+        # for path in self.paths:
+        #     path = os.path.join(self.root, path)
+        #     self.images.append(path)
         
     def __getitem__(self, index):
         image = pil_loader(self.images[index])
