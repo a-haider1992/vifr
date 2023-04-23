@@ -227,7 +227,7 @@ class AIResNet(IResNet):
             return embedding, x_id, x_age
         if return_gender:
             return embedding, x_id, x_age, x_gender
-        return embedding
+        return x_id, x_age
 
 
 class AgeEstimationModule(nn.Module):

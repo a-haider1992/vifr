@@ -229,22 +229,21 @@ class FR(BasicTask):
             # AgeDB
             # A pre-trained backbone is used
             images, ages = inputs
-            # embedding, x_id, x_age = self.backbone(images, return_age=True)
+            x_id, x_age = self.backbone(images)
         else:
             # For scaf
             self.head.train()
             images, labels, ages, genders = inputs
-
-        if opt.amp:
-            with amp.autocast():
-                embedding, x_id, x_age = self.backbone(
-                    images, return_age=True)
-            embedding = embedding.float()
-            x_id = x_id.float()
-            x_age = x_age.float()
-        else:
-            embedding, x_id, x_age, x_gender = self.backbone(
-                images, return_gender=True)
+            if opt.amp:
+                with amp.autocast():
+                    embedding, x_id, x_age = self.backbone(
+                        images, return_age=True)
+                embedding = embedding.float()
+                x_id = x_id.float()
+                x_age = x_age.float()
+            else:
+                embedding, x_id, x_age, x_gender = self.backbone(
+                    images, return_gender=True)
 
         if opt.gfr:
             # Train GFR only
