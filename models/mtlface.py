@@ -241,9 +241,9 @@ class MTLFace(object):
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image1, image2 = self.fr.prefetcher.next()
-                embedding1 = self.fr.backbone(image1)
-                embedding2 = self.fr.backbone(image2)
-                if self.isSame(embedding1, embedding2):
+                embedding1, id1, _ = self.fr.backbone(image1, return_age=True)
+                embedding2, id2, _ = self.fr.backbone(image2, return_age=True)
+                if self.isSame(id1, id2):
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred += 1
