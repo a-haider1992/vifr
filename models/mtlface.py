@@ -220,7 +220,7 @@ class MTLFace(object):
         #     return False
         diff = torch.abs(embed1 - embed2)
         # Check if the maximum difference is small enough
-        if diff.max() < 1e-5:
+        if diff.max() < 1e-2:
             return True
         else:
             return False
