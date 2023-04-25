@@ -211,7 +211,7 @@ class MTLFace(object):
     def isSame(self, embed1, embed2):
         result = torch.eq(embed1, embed2)
         num_ones = torch.sum(result == 1).item()
-        if num_ones > (result.size()[0] * result.size()[1])/4.0:
+        if num_ones > (result.size()[0] * result.size()[1])/6.0:
             return True
         else:
             return False
@@ -243,7 +243,7 @@ class MTLFace(object):
                 image1, image2 = self.fr.prefetcher.next()
                 embedding1, id1, _ = self.fr.backbone(image1, return_age=True)
                 embedding2, id2, _ = self.fr.backbone(image2, return_age=True)
-                if self.isSame(id1, id2):
+                if self.isSame(embedding1, embedding2):
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred += 1
