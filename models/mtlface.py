@@ -196,22 +196,31 @@ class MTLFace(object):
         if dist.get_rank() == 0:
             root = os.path.dirname(__file__)
             if opt.gfr:
-                PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model_fine_tuned.pt')
+                PATH_AGE_ESTIMATION = os.path.join(
+                    root, 'age_estimation_model_fine_tuned.pt')
                 torch.save(self.fr.estimation_network.state_dict(),
-                        PATH_AGE_ESTIMATION)
+                           PATH_AGE_ESTIMATION)
             else:
                 PATH_BACKBONE = os.path.join(root, 'backbone.pt')
-                PATH_AGE_ESTIMATION = os.path.join(root, 'age_estimation_model.pt')
+                PATH_AGE_ESTIMATION = os.path.join(
+                    root, 'age_estimation_model.pt')
                 PATH_GENDER_MODEL = os.path.join(root, 'gender_model.pt')
                 torch.save(self.fr.backbone.state_dict(), PATH_BACKBONE)
                 torch.save(self.fr.estimation_network.state_dict(),
-                        PATH_AGE_ESTIMATION)
-                torch.save(self.fr.gender_network.state_dict(), PATH_GENDER_MODEL)
+                           PATH_AGE_ESTIMATION)
+                torch.save(self.fr.gender_network.state_dict(),
+                           PATH_GENDER_MODEL)
 
     def isSame(self, embed1, embed2):
-        result = torch.eq(embed1, embed2)
-        num_ones = torch.sum(result == 1).item()
-        if num_ones > (result.size()[0] * result.size()[1])/6.0:
+        # result = torch.eq(embed1, embed2)
+        # num_ones = torch.sum(result == 1).item()
+        # if num_ones > (result.size()[0] * result.size()[1])/6.0:
+        #     return True
+        # else:
+        #     return False
+        diff = torch.abs(embed1 - embed2)
+        # Check if the maximum difference is small enough
+        if diff.max() < 1e-5:
             return True
         else:
             return False
