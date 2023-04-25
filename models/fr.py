@@ -131,7 +131,7 @@ class FR(BasicTask):
         head = CosFace(in_features=512, out_features=len(self.prefetcher.__loader__.dataset.classes),
                        s=opt.head_s, m=opt.head_m)
 
-        gender_estimation = GenderFeatureExtractor()
+        # gender_estimation = GenderFeatureExtractor()
 
         # if age estimation network to TD block VIT
         if opt.td_block:
@@ -182,7 +182,7 @@ class FR(BasicTask):
         self.backbone = backbone
         self.head = head
         self.estimation_network = estimation_network
-        self.gender_network = gender_estimation
+        # self.gender_network = gender_estimation
         self.da_discriminator = da_discriminator
         self.grl = GradientReverseLayer()
         self.scaler = scaler
@@ -295,7 +295,7 @@ class FR(BasicTask):
                 total_loss = self.scaler.scale(loss)
             self.optimizer.zero_grad()
             total_loss.backward()
-            apply_weight_decay(self.backbone, self.head, self.estimation_network,
+            apply_weight_decay(self.backbone, self.head, self.estimation_network, self.da_discriminator, 
                                weight_decay_factor=opt.weight_decay, wo_bn=True)
             if opt.amp:
                 self.scaler.step(self.optimizer)
