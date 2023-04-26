@@ -74,6 +74,7 @@ class AgeDB(tordata.Dataset):
         image2 = df['img_num2'].to_list()
         age_gap = df['age_gap'].astype(np.float32).to_list()
         self.images = {}
+        self.classes = self.image1
         for idx in range(0, len(image1)):
             self.images[idx] = [os.path.join(self.root,image1[idx]), 
                                 os.path.join(self.root,image2[idx]), age_gap[idx]]
