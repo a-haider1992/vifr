@@ -220,14 +220,17 @@ class MTLFace(object):
         #     return False
 
         similarity_error = torch.mean(torch.abs(embed1 - embed2))
-        normalized_error = (torch.abs(similarity_error) - torch.min(torch.abs(similarity_error))) / (torch.max(torch.abs(similarity_error)) 
-                                                                                          - torch.min(torch.abs(similarity_error)))
-        normalized_error = torch.mean(normalized_error)
+        # normalize the mean absolute difference between 0 and 1
+        max_value = torch.max(similarity_error)
+        if max_value != 0 and not torch.isnan(max_value):
+            normalized_error = similarity_error / max_value
+        else:
+            normalized_error = similarity_error
         cov = torch.mean((embed1 - torch.mean(embed1)) * (embed2 - torch.mean(embed2)))
         std_a = torch.std(embed1)
         std_b = torch.std(embed2)
         corr_coef = cov / (std_a * std_b)
-        return similarity_error.item(), corr_coef.item(), normalized_error.item()
+        return similarity_error.item(), corr_coef.item(), torch.mean(normalized_error).item()
 
     def evaluate_age_estimation(self):
         pass
@@ -253,7 +256,7 @@ class MTLFace(object):
                 embedding1 = self.fr.backbone(image1)
                 embedding2 = self.fr.backbone(image2)
                 similarity_error, mean_corr, norm_error = self.isSame(embedding1, embedding2)
-                print(similarity_error)
+                # print(similarity_error)
                 total_eval_error += norm_error
                 avg_corr += mean_corr
                 # if similarity_error <= 1e-4 or mean_corr >= 0.5:
