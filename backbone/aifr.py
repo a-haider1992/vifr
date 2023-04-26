@@ -197,8 +197,8 @@ class AIResNet(IResNet):
         # Downsample the concatenated tensor for substraction
         concatenated_x = F.interpolate(concatenated_x, size=(7, 7), mode='bicubic', align_corners=False)
         #  channel-wise pooling
-        # concatenated_x = self.channel_reducer(concatenated_x)
-        concatenated_x = concatenated_x[:, :512, :, :]
+        concatenated_x = self.channel_reducer(concatenated_x)
+        # concatenated_x = concatenated_x[:, :512, :, :]
         # concatenated_x = F.interpolate(concatenated_x, size=(512, 512), mode='trilinear', align_corners=True)
 
         # print(f'The final concatenated tensor shape:{concatenated_x.shape}')
