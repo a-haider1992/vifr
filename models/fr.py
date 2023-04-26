@@ -243,8 +243,8 @@ class FR(BasicTask):
                 x_id = x_id.float()
                 x_age = x_age.float()
             else:
-                embedding, x_id, x_age = self.backbone(
-                    images, return_age=True)
+                embedding, x_id, x_age, x_gender = self.backbone(
+                    images, return_gender=True)
 
         # if opt.gfr:
         #     # Train GFR only
@@ -281,7 +281,7 @@ class FR(BasicTask):
         da_loss = self.forward_da(x_id, ages)
 
         # Gender
-        x_genders = self.gender_network(x_id)
+        x_genders = self.gender_network(x_gender)
         gender_loss = F.cross_entropy(x_genders, genders)
 
         loss = id_loss + \
