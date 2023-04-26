@@ -168,12 +168,11 @@ class FR(BasicTask):
             optimizer = torch.optim.SGD(list(backbone.parameters()) +
                                         list(head.parameters()) +
                                         list(estimation_network.parameters()) +
-                                        list(da_discriminator.parameters()) +
-                                        list(gender_estimation.parameters()),
+                                        list(da_discriminator.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
         # if not opt.evaluation_only:
-        backbone, head, estimation_network, da_discriminator, gender_estimation = convert_to_ddp(backbone, head, estimation_network,
-                                                                                                 da_discriminator, gender_estimation)
+        backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
+                                                                                                 da_discriminator)
         # with open('VIT_keys_after_ddp.txt', 'w') as f:
         #         for key in estimation_network.state_dict().keys():
         #             f.write(key + '\n')
@@ -183,7 +182,7 @@ class FR(BasicTask):
         self.backbone = backbone
         self.head = head
         self.estimation_network = estimation_network
-        self.gender_network = gender_estimation
+        # self.gender_network = gender_estimation
         self.da_discriminator = da_discriminator
         self.grl = GradientReverseLayer()
         self.scaler = scaler
@@ -243,8 +242,8 @@ class FR(BasicTask):
                 x_id = x_id.float()
                 x_age = x_age.float()
             else:
-                embedding, x_id, x_age, x_gender = self.backbone(
-                    images, return_gender=True)
+                embedding, x_id, x_age = self.backbone(
+                    images, return_age=True)
 
         # if opt.gfr:
         #     # Train GFR only
@@ -281,12 +280,16 @@ class FR(BasicTask):
         da_loss = self.forward_da(x_id, ages)
 
         # Gender
-        x_genders = self.gender_network(x_gender)
-        gender_loss = F.cross_entropy(x_genders, genders)
+        # x_genders = self.gender_network(x_gender)
+        # gender_loss = F.cross_entropy(x_genders, genders)
+
+        gender_loss = 0.0
 
         loss = id_loss + \
             age_loss * opt.fr_age_loss_weight + \
-            da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight
+            da_loss * opt.fr_da_loss_weight
+        
+        # + gender_loss * opt.fr_gender_loss_weight
 
         total_loss = loss
 
@@ -302,8 +305,8 @@ class FR(BasicTask):
         else:
             self.optimizer.step()
 
-        id_loss, da_loss, age_loss, gender_loss = reduce_loss(
-            id_loss, da_loss, age_loss, gender_loss)
+        id_loss, da_loss, age_loss = reduce_loss(
+            id_loss, da_loss, age_loss)
         self.adjust_learning_rate(n_iter)
         lr = self.optimizer.param_groups[0]['lr']
         self.logger.msg(
