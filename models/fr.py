@@ -281,7 +281,7 @@ class FR(BasicTask):
         da_loss = self.forward_da(x_id, ages)
 
         # Gender
-        # x_genders = self.gender_network(x_gender)
+        x_genders = self.gender_network(x_id)
         # gender_loss = F.cross_entropy(x_genders, genders)
 
         gender_loss = 0.0
