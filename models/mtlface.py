@@ -218,10 +218,11 @@ class MTLFace(object):
         #     return True
         # else:
         #     return False
-        similarity_error = np.mean(np.abs(embed1 - embed2))
-        corr = np.corrcoef(embed1, embed2)
-        mean_corr = np.mean(corr[np.triu_indices_from(corr, k=1)])
-        return similarity_error, mean_corr
+        similarity_error = torch.mean(torch.abs(embed1 - embed2))
+        normalized_error = (similarity_error - torch.min(similarity_error)) / (torch.max(similarity_error) - torch.min(similarity_error))
+        corr = torch.corrcoef(embed1, embed2)
+        mean_corr = corr[0, 1]
+        return normalized_error, mean_corr.item()
 
     def evaluate_age_estimation(self):
         pass
@@ -239,22 +240,26 @@ class MTLFace(object):
         total_correct_pred = 0
         total_incorrect_pred = 0
         total_iter = int(opt.evaluation_num_iter)
+        total_eval_error = 0.0
+        avg_corr = 0.0
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image1, image2 = self.fr.prefetcher.next()
                 embedding1 = self.fr.backbone(image1)
                 embedding2 = self.fr.backbone(image2)
                 similarity_error, mean_corr = self.isSame(embedding1, embedding2)
-                if similarity_error <= 1e-4 or mean_corr >= 0.5:
-                    total_correct_pred += 1
-                else:
-                    total_incorrect_pred += 1
-            print("During evaluation, the model corectly predicts {} number of classes.".format(
-                total_correct_pred))
-            print("During evaluation, the model incorrectly predicts {} number of classes.".format(
-                total_incorrect_pred))
-            print("Model Accuracy:{}".format(total_correct_pred /
-                  (total_correct_pred+total_incorrect_pred)))
+                total_eval_error += similarity_error
+                avg_corr += mean_corr
+                # if similarity_error <= 1e-4 or mean_corr >= 0.5:
+                #     total_correct_pred += 1
+                # else:
+                #     total_incorrect_pred += 1
+            # print("During evaluation, the model corectly predicts {} number of classes.".format(
+            #     total_correct_pred))
+            # print("During evaluation, the model incorrectly predicts {} number of classes.".format(
+            #     total_incorrect_pred))
+            print("Model Accuracy:{}".format(total_eval_error / total_iter))
+            print("Average Correlation between prediction and true labels :{}".format(avg_corr / total_iter))
         # with torch.no_grad():
         #     for _ in range(0, total_iter):
         #         image, label = self.fr.eval_prefetcher.next()
