@@ -172,7 +172,7 @@ class FR(BasicTask):
                                         momentum=opt.momentum, lr=opt.learning_rate)
         # if not opt.evaluation_only:
         backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
-                                                                                                 da_discriminator)
+                                                                              da_discriminator)
         # with open('VIT_keys_after_ddp.txt', 'w') as f:
         #         for key in estimation_network.state_dict().keys():
         #             f.write(key + '\n')
@@ -283,12 +283,12 @@ class FR(BasicTask):
         # x_genders = self.gender_network(x_gender)
         # gender_loss = F.cross_entropy(x_genders, genders)
 
-        gender_loss = 0.0
+        # gender_loss = 0.0
 
         loss = id_loss + \
             age_loss * opt.fr_age_loss_weight + \
             da_loss * opt.fr_da_loss_weight
-        
+
         # + gender_loss * opt.fr_gender_loss_weight
 
         total_loss = loss
@@ -310,7 +310,7 @@ class FR(BasicTask):
         self.adjust_learning_rate(n_iter)
         lr = self.optimizer.param_groups[0]['lr']
         self.logger.msg(
-            [id_loss, da_loss, age_loss, gender_loss, lr], n_iter)
+            [id_loss, da_loss, age_loss, lr], n_iter)
 
     def age_pretrained_eval(self):
         opt = self.opt
