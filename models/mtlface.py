@@ -1,17 +1,19 @@
 import argparse
-import tqdm
-
-from .fr import FR
-from .fas import FAS
-from .td_block import TDTask
-from common.ops import load_network, load_network_1
-import os.path as osp
 import os
+import os.path as osp
+
+import numpy as np
 import torch
-import torch.nn.functional as F
 import torch.distributed as dist
 import torch.nn as nn
-import torch
+import torch.nn.functional as F
+import tqdm
+
+from common.ops import load_network, load_network_1
+
+from .fas import FAS
+from .fr import FR
+from .td_block import TDTask
 
 '''
 python -m torch.distributed.launch --nproc_per_node=8 --master_port=17647 main.py \
@@ -183,14 +185,6 @@ class MTLFace(object):
                 if opt.train_fas:
                     self.fas.validate(n_iter)
 
-    def fit_VIT(self):
-        opt = self.opt
-        # training routine
-        for n_iter in tqdm.trange(opt.restore_iter + 1, opt.num_iter + 1, disable=(opt.local_rank != 0)):
-            # img, label, age, gender
-            td_inputs = self.td_task.prefetcher.next()
-            self.td_task.train(td_inputs, n_iter)
-
     def save_model(self):
         opt = self.opt
         if dist.get_rank() == 0:
@@ -218,46 +212,43 @@ class MTLFace(object):
         #     return True
         # else:
         #     return False
-        diff = torch.abs(embed1 - embed2)
-        # Check if the maximum difference is small enough
-        if diff.max() < 1e-2:
-            return True
-        else:
-            return False
+        # diff = torch.abs(embed1 - embed2)
+        # # Check if the maximum difference is small enough
+        # if diff.max() < 1e-2:
+        #     return True
+        # else:
+        #     return False
+        similarity_error = np.mean(np.abs(embed1 - embed2))
+        corr = np.corrcoef(embed1, embed2)
+        mean_corr = np.mean(corr[np.triu_indices_from(corr, k=1)])
+        return similarity_error, mean_corr
 
     def evaluate_age_estimation(self):
-        self.fr.age_pretrained_eval()
+        pass
 
     def evaluate_gender_estimation(self):
-        self.fr.evaluate_gender_model()
+        # self.fr.evaluate_gender_model()
+        pass
 
     def evaluate_mtlface(self):
         # evaluate trained model
         opt = self.opt
         torch.cuda.empty_cache()
         print("MTL Face is under evaluation.")
-        self.fr.head.eval()
         self.fr.backbone.eval()
-        # this_dir = osp.dirname(__file__)
-        # path = osp.join(this_dir, 'test_rowan.jpg')
-        # img = pil_loader(path)
-        # img = self.fr.train_transform(img)
-        total_loss = 0
         total_correct_pred = 0
         total_incorrect_pred = 0
         total_iter = int(opt.evaluation_num_iter)
-        # Test on LFW
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image1, image2 = self.fr.prefetcher.next()
-                embedding1, id1, _ = self.fr.backbone(image1, return_age=True)
-                embedding2, id2, _ = self.fr.backbone(image2, return_age=True)
-                if self.isSame(embedding1, embedding2):
+                embedding1 = self.fr.backbone(image1)
+                embedding2 = self.fr.backbone(image2)
+                similarity_error, mean_corr = self.isSame(embedding1, embedding2)
+                if similarity_error <= 1e-4 or mean_corr >= 0.5:
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred += 1
-                    # print(embedding1)
-                    # print(embedding2)
             print("During evaluation, the model corectly predicts {} number of classes.".format(
                 total_correct_pred))
             print("During evaluation, the model incorrectly predicts {} number of classes.".format(

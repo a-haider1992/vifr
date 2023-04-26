@@ -70,21 +70,26 @@ class AgeDB(tordata.Dataset):
         self.transform = transform
         self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'AgeDB')
         df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
-        self.data = df.values
-        self.ages = self.data[:, 1].astype(np.float32)
-        self.images = np.array([osp.join(self.root, x) for x in self.data[:, 0]])
-        self.classes = self.data[:, 0]
+        image1 = df['img_num1'].to_list()
+        image2 = df['img_num2'].to_list()
+        age_gap = df['age_gap'].astype(np.float32).to_list()
+        self.images = {}
+        for idx in range(0, len(image1)):
+            self.images[idx] = [os.path.join(self.root,image1[idx]), 
+                                os.path.join(self.root,image2[idx]), age_gap[idx]]
         # self.images = []
         # for path in self.paths:
         #     path = os.path.join(self.root, path)
         #     self.images.append(path)
         
     def __getitem__(self, index):
-        image = pil_loader(self.images[index])
+        image1 = pil_loader(self.images[index][0])
+        image2 = pil_loader(self.images[index][1])
         if self.transform is not None:
-            image = self.transform(image)
-        age = self.ages[index]
-        return image, age
+            image1 = self.transform(image1)
+            image2 = self.transform(image2)
+        age_gap = self.images[index][2]
+        return image1, image2
     def __len__(self):
         return len(self.images)
     
