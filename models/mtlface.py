@@ -219,13 +219,13 @@ class MTLFace(object):
         # else:
         #     return False
         similarity_error = torch.mean(torch.abs(embed1 - embed2))
-        # normalized_error = (similarity_error - torch.min(similarity_error)) / (torch.max(similarity_error) - torch.min(similarity_error))
-        
+        normalized_error = (similarity_error - torch.min(similarity_error)) / (torch.max(similarity_error) - torch.min(similarity_error))
+        normalized_error = torch.mean(normalized_error)
         cov = torch.mean((embed1 - torch.mean(embed1)) * (embed2 - torch.mean(embed2)))
         std_a = torch.std(embed1)
         std_b = torch.std(embed2)
         corr_coef = cov / (std_a * std_b)
-        return similarity_error.item(), corr_coef.item()
+        return similarity_error.item(), corr_coef.item(), normalized_error.item()
 
     def evaluate_age_estimation(self):
         pass
@@ -250,9 +250,9 @@ class MTLFace(object):
                 image1, image2 = self.fr.prefetcher.next()
                 embedding1 = self.fr.backbone(image1)
                 embedding2 = self.fr.backbone(image2)
-                similarity_error, mean_corr = self.isSame(embedding1, embedding2)
+                similarity_error, mean_corr, norm_error = self.isSame(embedding1, embedding2)
                 print(similarity_error)
-                total_eval_error += similarity_error
+                total_eval_error += norm_error
                 avg_corr += mean_corr
                 # if similarity_error <= 1e-4 or mean_corr >= 0.5:
                 #     total_correct_pred += 1
@@ -262,7 +262,7 @@ class MTLFace(object):
             #     total_correct_pred))
             # print("During evaluation, the model incorrectly predicts {} number of classes.".format(
             #     total_incorrect_pred))
-            print("Model Accuracy:{}".format(total_eval_error / total_iter))
+            print("Model Accuracy:{}".format(1 - (total_eval_error / total_iter)))
             print("Average Correlation between prediction and true labels :{}".format(avg_corr / total_iter))
         # with torch.no_grad():
         #     for _ in range(0, total_iter):
