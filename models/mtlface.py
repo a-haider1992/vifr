@@ -218,8 +218,10 @@ class MTLFace(object):
         #     return True
         # else:
         #     return False
+
         similarity_error = torch.mean(torch.abs(embed1 - embed2))
-        normalized_error = (similarity_error - torch.min(similarity_error)) / (torch.max(similarity_error) - torch.min(similarity_error))
+        normalized_error = (torch.abs(similarity_error) - torch.min(torch.abs(similarity_error))) / (torch.max(torch.abs(similarity_error)) 
+                                                                                          - torch.min(torch.abs(similarity_error)))
         normalized_error = torch.mean(normalized_error)
         cov = torch.mean((embed1 - torch.mean(embed1)) * (embed2 - torch.mean(embed2)))
         std_a = torch.std(embed1)
