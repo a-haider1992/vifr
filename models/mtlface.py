@@ -232,7 +232,7 @@ class MTLFace(object):
         corr_coef = cov / (std_a * std_b)
         return similarity_error.item(), corr_coef.item(), torch.mean(normalized_error).item()
     
-    def checkEq(embed1, embed2):
+    def checkEq(self, embed1, embed2):
         result = torch.eq(embed1, embed2)
         num_ones = torch.sum(result == 1).item()
         if num_ones > (result.size()[0] * result.size()[1])/4.0:
