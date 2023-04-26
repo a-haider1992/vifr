@@ -131,7 +131,7 @@ class FR(BasicTask):
         head = CosFace(in_features=512, out_features=len(self.prefetcher.__loader__.dataset.classes),
                        s=opt.head_s, m=opt.head_m)
 
-        gender_estimation = GenderFeatureExtractor()
+        # gender_estimation = GenderFeatureExtractor()
 
         # if age estimation network to TD block VIT
         if opt.td_block:
