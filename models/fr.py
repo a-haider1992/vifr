@@ -282,7 +282,7 @@ class FR(BasicTask):
 
         # Gender
         x_genders = self.gender_network(x_id)
-        # gender_loss = F.cross_entropy(x_genders, genders)
+        gender_loss = F.cross_entropy(x_genders, genders)
 
         gender_loss = 0.0
 
