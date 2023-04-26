@@ -219,13 +219,13 @@ class MTLFace(object):
         # else:
         #     return False
         similarity_error = torch.mean(torch.abs(embed1 - embed2))
-        normalized_error = (similarity_error - torch.min(similarity_error)) / (torch.max(similarity_error) - torch.min(similarity_error))
+        # normalized_error = (similarity_error - torch.min(similarity_error)) / (torch.max(similarity_error) - torch.min(similarity_error))
         
         cov = torch.mean((embed1 - torch.mean(embed1)) * (embed2 - torch.mean(embed2)))
         std_a = torch.std(embed1)
         std_b = torch.std(embed2)
         corr_coef = cov / (std_a * std_b)
-        return normalized_error, corr_coef.item()
+        return similarity_error.item(), corr_coef.item()
 
     def evaluate_age_estimation(self):
         pass
