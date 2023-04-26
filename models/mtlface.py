@@ -257,7 +257,7 @@ class MTLFace(object):
                 embedding2 = self.fr.backbone(image2)
                 similarity_error, mean_corr, norm_error = self.isSame(embedding1, embedding2)
                 # print(similarity_error)
-                total_eval_error += norm_error
+                total_eval_error += similarity_error
                 avg_corr += mean_corr
                 # if similarity_error <= 1e-4 or mean_corr >= 0.5:
                 #     total_correct_pred += 1
