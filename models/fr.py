@@ -284,8 +284,6 @@ class FR(BasicTask):
         x_genders = self.gender_network(x_id)
         gender_loss = F.cross_entropy(x_genders, genders)
 
-        gender_loss = 0.0
-
         loss = id_loss + \
             age_loss * opt.fr_age_loss_weight + \
             da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight
