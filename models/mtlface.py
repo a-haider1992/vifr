@@ -267,6 +267,7 @@ class MTLFace(object):
             #     total_correct_pred))
             # print("During evaluation, the model incorrectly predicts {} number of classes.".format(
             #     total_incorrect_pred))
+            print(f'Similarity score {total_eval_error / total_iter}')
             print("Model Accuracy:{}".format(1 - (total_eval_error / total_iter)))
             print("Average Correlation between prediction and true labels :{}".format(avg_corr / total_iter))
         # with torch.no_grad():
