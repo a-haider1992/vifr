@@ -297,7 +297,6 @@ class FR(BasicTask):
         self.optimizer.zero_grad()
         total_loss.backward()
         apply_weight_decay(self.backbone, self.head, self.estimation_network,
-                           self.gender_network,
                            weight_decay_factor=opt.weight_decay, wo_bn=True)
         if opt.amp:
             self.scaler.step(self.optimizer)
