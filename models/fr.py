@@ -221,78 +221,32 @@ class FR(BasicTask):
 
     def train(self, inputs, n_iter):
         opt = self.opt
+        
+        images, labels, ages, genders = inputs
         self.backbone.train()
-        self.estimation_network.train()
+        self.head.train()
         self.da_discriminator.train()
+        self.estimation_network.train()
 
-        if opt.gfr:
-            # AgeDB
-            # A pre-trained backbone is used
-            images, ages = inputs
-            x_id, x_age = self.backbone(images)
+        if opt.amp:
+            with amp.autocast():
+                embedding, x_id, x_age = self.backbone(images, return_age=True)
+            embedding = embedding.float()
+            x_id = x_id.float()
+            x_age = x_age.float()
         else:
-            # For scaf
-            self.head.train()
-            images, labels, ages, genders = inputs
-            if opt.amp:
-                with amp.autocast():
-                    embedding, x_id, x_age = self.backbone(
-                        images, return_age=True)
-                embedding = embedding.float()
-                x_id = x_id.float()
-                x_age = x_age.float()
-            else:
-                embedding, x_id, x_age = self.backbone(
-                    images, return_age=True)
+            embedding, x_id, x_age = self.backbone(images, return_age=True)
 
-        # if opt.gfr:
-        #     # Train GFR only
-        #     x_age, x_group = self.estimation_network(x_age)
-        #     # out = get_dex_age(x_age)
-        #     # print(out)
-        #     # print("-------------------------------------")
-        #     # print(ages)
-        #     age_loss = self.compute_age_loss(x_age, x_group, ages)
-        #     da_loss = self.forward_da(x_id, ages)
-        #     loss = age_loss * opt.fr_age_loss_weight + \
-        #         da_loss * opt.fr_da_loss_weight
-        #     self.optimizer.zero_grad()
-        #     loss.backward()
-        #     self.optimizer.step()
-        #     apply_weight_decay(self.estimation_network,
-        #                        weight_decay_factor=opt.weight_decay, wo_bn=True)
-        #     age_loss, da_loss = reduce_loss(age_loss, da_loss)
-        #     self.adjust_learning_rate(n_iter)
-        #     lr = self.optimizer.param_groups[0]['lr']
-        #     self.logger.msg([age_loss, da_loss, lr], n_iter)
-        # else:
-        # Train Face Recognition with ages and genders
-
+        ######## Train Face Recognition
         id_loss = F.cross_entropy(self.head(embedding, labels), labels)
-
-        # If using VIT then feed images directly to estimation network
-        # if opt.td_block:
-
-        # x_age, x_group = self.estimation_network(images)
-
         x_age, x_group = self.estimation_network(x_age)
         age_loss = self.compute_age_loss(x_age, x_group, ages)
         da_loss = self.forward_da(x_id, ages)
-
-        # Gender
-        # x_genders = self.gender_network(x_gender)
-        # gender_loss = F.cross_entropy(x_genders, genders)
-
-        # gender_loss = 0.0
-
         loss = id_loss + \
-            age_loss * opt.fr_age_loss_weight + \
-            da_loss * opt.fr_da_loss_weight
-
-        # + gender_loss * opt.fr_gender_loss_weight
+               age_loss * opt.fr_age_loss_weight + \
+               da_loss * opt.fr_da_loss_weight
 
         total_loss = loss
-
         if opt.amp:
             total_loss = self.scaler.scale(loss)
         self.optimizer.zero_grad()
@@ -305,12 +259,9 @@ class FR(BasicTask):
         else:
             self.optimizer.step()
 
-        id_loss, da_loss, age_loss = reduce_loss(
-            id_loss, da_loss, age_loss)
-        self.adjust_learning_rate(n_iter)
+        id_loss, da_loss, age_loss = reduce_loss(id_loss, da_loss, age_loss)
         lr = self.optimizer.param_groups[0]['lr']
-        self.logger.msg(
-            [id_loss, da_loss, age_loss, lr], n_iter)
+        self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
 
     def age_pretrained_eval(self):
         opt = self.opt
