@@ -262,6 +262,7 @@ class FR(BasicTask):
         id_loss, da_loss, age_loss = reduce_loss(id_loss, da_loss, age_loss)
         lr = self.optimizer.param_groups[0]['lr']
         self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
+        return id_loss, age_loss, total_loss
 
     def age_pretrained_eval(self):
         opt = self.opt

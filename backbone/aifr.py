@@ -48,7 +48,7 @@ class GenderFeatureExtractor(nn.Module):
         # Define pooling layers
         pool_size = (7, 7)
         # self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        
+
         self.pool = nn.AdaptiveMaxPool2d(pool_size)
         self.bn = nn.BatchNorm2d(num_features=512)
 
@@ -56,10 +56,9 @@ class GenderFeatureExtractor(nn.Module):
         # self.fc1 = nn.Linear(in_features=256 * 16 * 16, out_features=1024)
         self.fc2 = nn.Linear(in_features=512 * 7 * 7, out_features=2)
 
-
     def forward(self, x):
         x = self.pool(x)
-        x= self.bn(x)
+        x = self.bn(x)
 
         # Flatten output tensor for fully connected layers
         x = x.view(-1, 512 * 7 * 7)
@@ -69,6 +68,8 @@ class GenderFeatureExtractor(nn.Module):
         return x
 
 # Ethinicty Classifier
+
+
 class EthnicityFeatureExtractor(nn.Module):
     def __init__(self):
         super(EthnicityFeatureExtractor, self).__init__()
@@ -76,7 +77,8 @@ class EthnicityFeatureExtractor(nn.Module):
         self.pool1 = nn.AdaptiveMaxPool2d((64, 64))
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
         self.pool2 = nn.AdaptiveMaxPool2d((128, 128))
-        self.conv3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3)
+        self.conv3 = nn.Conv2d(
+            in_channels=128, out_channels=256, kernel_size=3)
         self.pool3 = nn.AdaptiveMaxPool2d((512, 512))
         # self.fc1 = nn.Linear(64 * 6 * 6, 128)
         # self.fc2 = nn.Linear(128, 5)  # 5 possible ethnicities
@@ -131,27 +133,57 @@ class AttentionModule(nn.Module):
         return x_id, x_age
 
 
-def twinify_tensors(tensor1, tensor2):
-        if tensor1.shape[2:] != tensor2.shape[2:]:
-            h_diff = abs(tensor1.shape[2] - tensor2.shape[2])
-            w_diff = abs(tensor1.shape[3] - tensor2.shape[3])
-            if tensor1.shape[2] > tensor2.shape[2]:
-                tensor2 = torch.nn.functional.pad(tensor2, 
-                                                (0, 0, 0, 0, h_diff // 2, h_diff // 2 + 
-                                                h_diff % 2, w_diff // 2, w_diff // 2 + 
-                                                w_diff % 2))
-            else:
-                tensor1 = torch.nn.functional.pad(tensor1, 
-                                                (0, 0, 0, 0, h_diff // 2, h_diff // 2 + 
-                                                h_diff % 2, w_diff // 2, w_diff // 2 + 
-                                                w_diff % 2))
-            return tensor1, tensor2
+class RFD(nn.Module):
+    def __init__(self):
+        super(RFD, self).__init__()
+        self.channel_reducer = torch.nn.Conv2d(in_channels=512+256+128+64,
+                                               out_channels=512, kernel_size=1)
+
+    def forward(self, *blocks):
+        x_2 = blocks[0]
+        x_3 = blocks[1]
+        x_4 = blocks[2]
+        x_5 = blocks[3]
+        x_id = blocks[4]
+        x_age = blocks[5]
+
+        # Gender features from Gender Module
+        # Upsample each tensor assuming tensors are of shape (batch_size, channels, width, height)
+        # assert x_2.ndim == 4, f"Expected tensor to have four dimensions, but got {x_2.ndim}"
+        # assert x_3.ndim == 4, f"Expected tensor to have four dimensions, but got {x_3.ndim}"
+        # assert x_4.ndim == 4, f"Expected tensor to have four dimensions, but got {x_4.ndim}"
+        # assert x_5.ndim == 4, f"Expected tensor to have four dimensions, but got {x_5.ndim}"
+
+        up_x_5 = F.interpolate(x_5, size=(56, 56), mode='bilinear', align_corners=False)
+        up_x_4 = F.interpolate(x_4, size=(56, 56), mode='bilinear', align_corners=False)
+        up_x_3 = F.interpolate(x_3, size=(56, 56), mode='bilinear', align_corners=False)
+
+        # Concate along channels
+        concatenated_x = torch.cat([x_2, up_x_3, up_x_4, up_x_5], dim=1)
+        # Concate along height
+        # concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=2)
+        # Concate along width
+        # concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=3)
+
+        # Downsample the concatenated tensor for substraction
+        concatenated_x = F.interpolate(concatenated_x, size=(7, 7), mode='bicubic', align_corners=False)
+        #  channel-wise pooling
+        concatenated_x = self.channel_reducer(concatenated_x)
+        # concatenated_x = concatenated_x[:, :512, :, :]
+        # concatenated_x = F.interpolate(concatenated_x, size=(512, 512), mode='trilinear', align_corners=True)
+
+        # Approach 1
+        x_gender = concatenated_x - (x_age + x_id)
+        # Approach 2
+        # x_gender = x - x_5
+        return x_gender
+
 
 class AIResNet(IResNet):
     def __init__(self, input_size, num_layers, mode='ir', **kwargs):
         super(AIResNet, self).__init__(input_size, num_layers, mode)
         self.fsm = AttentionModule()
-        # self.channel_reducer = torch.nn.Conv2d(in_channels=512+256+128+64, out_channels=512, kernel_size=1)
+        # self.rfd = RFD()
         self.output_layer = nn.Sequential(
             nn.BatchNorm2d(512),
             nn.Dropout(),
@@ -166,53 +198,16 @@ class AIResNet(IResNet):
         x_3 = self.block2(x_2)
         x_4 = self.block3(x_3)
         x_5 = self.block4(x_4)
-        # Id and age related features by Attention Module
         x_id, x_age = self.fsm(x_5)
 
-        # Embedding of image
         embedding = self.output_layer(x_id)
 
-        # Gender features from Gender Module
-        # Upsample each tensor assuming tensors are of shape (batch_size, channels, width, height)
-        # assert x_2.ndim == 4, f"Expected tensor to have four dimensions, but got {x_2.ndim}"
-        # assert x_3.ndim == 4, f"Expected tensor to have four dimensions, but got {x_3.ndim}"
-        # assert x_4.ndim == 4, f"Expected tensor to have four dimensions, but got {x_4.ndim}"
-        # assert x_5.ndim == 4, f"Expected tensor to have four dimensions, but got {x_5.ndim}"
-
-        # _, up_x_5 = twinify_tensors(x_2, x_5)
-        # _, up_x_4 = twinify_tensors(x_2, x_4)
-        # _, up_x_3 = twinify_tensors(x_2, x_3)
-
-        # up_x_5 = F.interpolate(x_5, size=(56, 56), mode='bilinear', align_corners=False)
-        # up_x_4 = F.interpolate(x_4, size=(56, 56), mode='bilinear', align_corners=False)
-        # up_x_3 = F.interpolate(x_3, size=(56, 56), mode='bilinear', align_corners=False)
-
-        ## Concate along channels
-        # concatenated_x = torch.cat([x_2, up_x_3, up_x_4, up_x_5], dim=1)
-        # Concate along height
-        # concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=2)
-        # Concate along width
-        # concatenated_x = torch.cat([concatenated_x, x_2, up_x_3, up_x_4, up_x_5], dim=3)
-
-        # Downsample the concatenated tensor for substraction
-        # concatenated_x = F.interpolate(concatenated_x, size=(7, 7), mode='bicubic', align_corners=False)
-        #  channel-wise pooling
-        # concatenated_x = self.channel_reducer(concatenated_x)
-        # concatenated_x = concatenated_x[:, :512, :, :]
-        # concatenated_x = F.interpolate(concatenated_x, size=(512, 512), mode='trilinear', align_corners=True)
-
-        # print(f'The final concatenated tensor shape:{concatenated_x.shape}')
-
-        # Approach 1
-        # x_gender = concatenated_x - (x_age + x_id)
-        # Approach 2
-        # x_gender = x - x_5
-        
         if return_shortcuts:
             return x_1, x_2, x_3, x_4, x_5, x_id, x_age
         if return_age:
             return embedding, x_id, x_age
         # if return_gender:
+        #     x_gender = self.rfd(x_2, x_3, x_4, x_5, x_id, x_age)
         #     return embedding, x_id, x_age, x_gender
         return embedding
 
