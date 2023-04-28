@@ -182,7 +182,7 @@ class AIResNet(IResNet):
     def __init__(self, input_size, num_layers, mode='ir', **kwargs):
         super(AIResNet, self).__init__(input_size, num_layers, mode)
         self.fsm = AttentionModule()
-        # self.rfd = RFD()
+        self.rfd = RFD()
         self.output_layer = nn.Sequential(
             nn.BatchNorm2d(512),
             nn.Dropout(),
