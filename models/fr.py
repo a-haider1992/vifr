@@ -131,18 +131,18 @@ class FR(BasicTask):
         head = CosFace(in_features=512, out_features=len(self.prefetcher.__loader__.dataset.classes),
                        s=opt.head_s, m=opt.head_m)
 
-        # gender_estimation = GenderFeatureExtractor()
+        gender_estimation = GenderFeatureExtractor()
 
         # if age estimation network to TD block VIT
         if opt.td_block:
             da_discriminator = estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
                                                         hidden_features=opt.vit_hidden_f,
                                                         num_heads=opt.vit_heads, num_layers=opt.vit_blocks, age_group=opt.age_group)
-            # estimation_network = PreTrainedVIT(image_size=opt.image_size)
-            optimizer_new = torch.optim.Adam(list(backbone.parameters()) +
+            optimizer = torch.optim.Adam(list(backbone.parameters()) +
                                              list(head.parameters()) +
-                                             list(
-                                                 estimation_network.parameters()),
+                                             list(estimation_network.parameters()) +
+                                             list(gender_estimation.parameters()) +
+                                             list(da_discriminator.parameters()),
                                              lr=opt.learning_rate, betas=(opt.momentum, 0.999))
            # with open('VIT_keys.txt', 'w') as f:
             #     for key in estimation_network.state_dict().keys():
@@ -171,18 +171,17 @@ class FR(BasicTask):
                                         list(da_discriminator.parameters()),
                                         momentum=opt.momentum, lr=opt.learning_rate)
         # if not opt.evaluation_only:
-        backbone, head, estimation_network, da_discriminator = convert_to_ddp(backbone, head, estimation_network,
-                                                                              da_discriminator)
+        backbone, head, estimation_network, da_discriminator, gender_estimation = convert_to_ddp(backbone, head, estimation_network,
+                                                                              da_discriminator, gender_estimation)
         # with open('VIT_keys_after_ddp.txt', 'w') as f:
         #         for key in estimation_network.state_dict().keys():
         #             f.write(key + '\n')
         scaler = amp.GradScaler()
         self.optimizer = optimizer
-        # self.optimizer = optimizer_new
         self.backbone = backbone
         self.head = head
         self.estimation_network = estimation_network
-        # self.gender_network = gender_estimation
+        self.gender_network = gender_estimation
         self.da_discriminator = da_discriminator
         self.grl = GradientReverseLayer()
         self.scaler = scaler
@@ -227,6 +226,7 @@ class FR(BasicTask):
         self.head.train()
         self.da_discriminator.train()
         self.estimation_network.train()
+        self.gender_network.train()
 
         if opt.amp:
             with amp.autocast():
@@ -235,23 +235,24 @@ class FR(BasicTask):
             x_id = x_id.float()
             x_age = x_age.float()
         else:
-            embedding, x_id, x_age = self.backbone(images, return_age=True)
+            embedding, x_id, x_age, x_residual = self.backbone(images, return_residual=True)
 
         ######## Train Face Recognition
         id_loss = F.cross_entropy(self.head(embedding, labels), labels)
         x_age, x_group = self.estimation_network(x_age)
         age_loss = self.compute_age_loss(x_age, x_group, ages)
         da_loss = self.forward_da(x_id, ages)
+        gender_loss = F.cross_entropy(self.gender_network(x_residual), genders)
         loss = id_loss + \
                age_loss * opt.fr_age_loss_weight + \
-               da_loss * opt.fr_da_loss_weight
+               da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight
 
         total_loss = loss
         if opt.amp:
             total_loss = self.scaler.scale(loss)
         self.optimizer.zero_grad()
         total_loss.backward()
-        apply_weight_decay(self.backbone, self.head, self.estimation_network,
+        apply_weight_decay(self.backbone, self.head, self.estimation_network, self.gender_network,
                            weight_decay_factor=opt.weight_decay, wo_bn=True)
         if opt.amp:
             self.scaler.step(self.optimizer)
@@ -259,10 +260,10 @@ class FR(BasicTask):
         else:
             self.optimizer.step()
 
-        id_loss, da_loss, age_loss = reduce_loss(id_loss, da_loss, age_loss)
+        id_loss, da_loss, age_loss, gender_loss = reduce_loss(id_loss, da_loss, age_loss, gender_loss)
         lr = self.optimizer.param_groups[0]['lr']
-        self.logger.msg([id_loss, da_loss, age_loss, lr], n_iter)
-        return id_loss, age_loss, total_loss
+        self.logger.msg([id_loss, da_loss, age_loss, gender_loss, lr], n_iter)
+        return id_loss, age_loss, gender_loss, total_loss
 
     def age_pretrained_eval(self):
         opt = self.opt

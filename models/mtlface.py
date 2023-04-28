@@ -170,13 +170,13 @@ class MTLFace(object):
         opt = self.opt
         # training routine
         train_losses = open('training_loss.csv', 'w')
-        train_losses.write("Id-Loss"+","+"Age-Loss"+","+"MTL-Loss"+"\n")
+        train_losses.write("Id-Loss"+","+"Age-Loss"+","+"Gender-Loss"+","+"MTL-Loss"+"\n")
         for n_iter in tqdm.trange(opt.restore_iter + 1, opt.num_iter + 1, disable=(opt.local_rank != 0)):
             # img, label, age, gender
             fr_inputs = self.fr.prefetcher.next()
             if opt.train_fr:
-                l1, l2, l3 = self.fr.train(fr_inputs, n_iter)
-                train_losses.write(str(l1)+","+str(l2)+","+str(l3.item())+"\n")
+                l1, l2, gl, l3 = self.fr.train(fr_inputs, n_iter)
+                train_losses.write(str(l1)+","+str(l2)+","+str(gl)+","+str(l3.item())+"\n")
             if opt.train_fas and not opt.gfr:
                 # target_img, target_label
                 fas_inputs = self.fas.prefetcher.next()

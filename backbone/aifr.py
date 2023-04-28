@@ -191,7 +191,7 @@ class AIResNet(IResNet):
             nn.BatchNorm1d(512))
         self._initialize_weights()
 
-    def forward(self, x, return_age=False, return_gender=False, return_shortcuts=False):
+    def forward(self, x, return_age=False, return_residual=False, return_shortcuts=False):
         x_1 = self.input_layer(x)
         x_2 = self.block1(x_1)
         x_3 = self.block2(x_2)
@@ -205,9 +205,9 @@ class AIResNet(IResNet):
             return x_1, x_2, x_3, x_4, x_5, x_id, x_age
         if return_age:
             return embedding, x_id, x_age
-        # if return_gender:
-        #     x_gender = self.rfd(x_2, x_3, x_4, x_5, x_id, x_age)
-        #     return embedding, x_id, x_age, x_gender
+        if return_residual:
+            x_residual = self.rfd(x_2, x_3, x_4, x_5, x_id, x_age)
+            return embedding, x_id, x_age, x_residual
         return embedding
 
 
