@@ -142,12 +142,12 @@ class FR(BasicTask):
             #                             list(gender_estimation.parameters()) +
             #                             list(da_discriminator.parameters()),
             #                             lr=opt.learning_rate, momentum=opt.momentum)
-            optimizer = torch.optim.Adam(list(backbone.parameters()) +
+            optimizer = torch.optim.ASGD(list(backbone.parameters()) +
                                         list(head.parameters()) +
                                         list(estimation_network.parameters()) +
                                         list(gender_estimation.parameters()) +
                                         list(da_discriminator.parameters()),
-                                        lr=opt.learning_rate, betas=(0.9, 0.999), eps=1e-8)
+                                        lr=opt.learning_rate)
         else:
             estimation_network = AgeEstimationModule(
                 input_size=opt.image_size, age_group=opt.age_group)
