@@ -130,8 +130,8 @@ class MTLFace(object):
         # GENERAL FACE RECOGNITION
         parser.add_argument("--gfr", help='general face recognition without age',
                             action='store_true')
-        parser.add_argument("--agedb_protocol",
-                            help='AgeDB protocol', type=str)
+        parser.add_argument("--age_protocol",
+                            help='Age protocol', type=str)
         
 
         # TESTING
@@ -176,7 +176,7 @@ class MTLFace(object):
             fr_inputs = self.fr.prefetcher.next()
             if opt.train_fr:
                 l1, l2, l3 = self.fr.train(fr_inputs, n_iter)
-                train_losses.write(str(l1)+","+str(l2)+","+str(l3)+"\n")
+                train_losses.write(str(l1)+","+str(l2)+","+str(l3.item())+"\n")
             if opt.train_fas and not opt.gfr:
                 # target_img, target_label
                 fas_inputs = self.fas.prefetcher.next()
