@@ -130,6 +130,9 @@ class MTLFace(object):
         # GENERAL FACE RECOGNITION
         parser.add_argument("--gfr", help='general face recognition without age',
                             action='store_true')
+        parser.add_argument("--agedb_protocol",
+                            help='AgeDB protocol', type=str)
+        
 
         # TESTING
         parser.add_argument("--evaluation_dataset",
@@ -214,7 +217,7 @@ class MTLFace(object):
         euclidean_distance = torch.norm(a - b, p=2)
 
         # Compute cosine similarity
-        cosine_similarity = F.cosine_similarity(a, b)
+        cosine_similarity = F.cosine_similarity(a, b).item()
 
         # Compute correlation coefficient
         cov = torch.mean((a - torch.mean(a)) * (b - torch.mean(b)))

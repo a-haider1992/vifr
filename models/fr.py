@@ -94,7 +94,7 @@ class FR(BasicTask):
             if opt.dataset_name == "AgeDB":
                 torch.cuda.empty_cache()
                 age_db_dataset = TrainingDataAge(
-                    'AgeDB.csv', agedb_transform)
+                    opt.agedb_protocol, agedb_transform)
                 # agedb_evaluation_dataset = EvaluationDataAge(
                 #     'agedb_test.csv', agedb_transform)
                 weights = None
