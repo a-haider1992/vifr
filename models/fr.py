@@ -311,7 +311,7 @@ class FR(BasicTask):
         total_incorrect_pred = 0
         with torch.no_grad():
             for _ in range(0, int(opt.evaluation_num_iter)):
-                image, age = self.prefetcher.next()
+                image, age, gender = self.prefetcher.next()
                 target_age = age.item()
                 if opt.age_group == 7:
                     target_group = 0

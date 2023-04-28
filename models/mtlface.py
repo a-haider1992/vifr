@@ -274,7 +274,7 @@ class MTLFace(object):
             return False
 
     def evaluate_age_estimation(self):
-        pass
+        self.fr.age_pretrained_eval()
 
     def evaluate_gender_estimation(self):
         # self.fr.evaluate_gender_model()
