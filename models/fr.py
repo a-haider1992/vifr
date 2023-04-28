@@ -132,39 +132,21 @@ class FR(BasicTask):
                        s=opt.head_s, m=opt.head_m)
 
         gender_estimation = GenderFeatureExtractor()
-
-        # if age estimation network to TD block VIT
         if opt.td_block:
             da_discriminator = estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
                                                         hidden_features=opt.vit_hidden_f,
                                                         num_heads=opt.vit_heads, num_layers=opt.vit_blocks, age_group=opt.age_group)
             optimizer = torch.optim.Adam(list(backbone.parameters()) +
-                                             list(head.parameters()) +
-                                             list(estimation_network.parameters()) +
-                                             list(gender_estimation.parameters()) +
-                                             list(da_discriminator.parameters()),
-                                             lr=opt.learning_rate, betas=(opt.momentum, 0.999))
-           # with open('VIT_keys.txt', 'w') as f:
-            #     for key in estimation_network.state_dict().keys():
-            #         f.write(key + '\n')
-            # with open('backbone_keys.txt', 'w') as f:
-            #     for key in backbone.state_dict().keys():
-            #         f.write(key + '\n')
-
-            # estimation_network = MyViT((3, opt.image_size, opt.image_size), n_patches=7, n_blocks=5,
-            #                       hidden_d=32, n_heads=10, out_d=101, age_group=opt.age_group)
+                                         list(head.parameters()) +
+                                         list(estimation_network.parameters()) +
+                                         list(gender_estimation.parameters()) +
+                                         list(da_discriminator.parameters()),
+                                         lr=opt.learning_rate, betas=(opt.momentum, 0.999))
         else:
             estimation_network = AgeEstimationModule(
                 input_size=opt.image_size, age_group=opt.age_group)
             da_discriminator = AgeEstimationModule(
                 input_size=opt.image_size, age_group=opt.age_group)
-
-        if opt.gfr:
-            optimizer = torch.optim.SGD(list(backbone.parameters()) +
-                                        list(estimation_network.parameters()) +
-                                        list(da_discriminator.parameters()),
-                                        momentum=opt.momentum, lr=opt.learning_rate)
-        else:
             optimizer = torch.optim.SGD(list(backbone.parameters()) +
                                         list(head.parameters()) +
                                         list(estimation_network.parameters()) +
@@ -172,7 +154,7 @@ class FR(BasicTask):
                                         momentum=opt.momentum, lr=opt.learning_rate)
         # if not opt.evaluation_only:
         backbone, head, estimation_network, da_discriminator, gender_estimation = convert_to_ddp(backbone, head, estimation_network,
-                                                                              da_discriminator, gender_estimation)
+                                                                                                 da_discriminator, gender_estimation)
         # with open('VIT_keys_after_ddp.txt', 'w') as f:
         #         for key in estimation_network.state_dict().keys():
         #             f.write(key + '\n')
@@ -220,7 +202,7 @@ class FR(BasicTask):
 
     def train(self, inputs, n_iter):
         opt = self.opt
-        
+
         images, labels, ages, genders = inputs
         self.backbone.train()
         self.head.train()
@@ -235,17 +217,18 @@ class FR(BasicTask):
             x_id = x_id.float()
             x_age = x_age.float()
         else:
-            embedding, x_id, x_age, x_residual = self.backbone(images, return_residual=True)
+            embedding, x_id, x_age, x_residual = self.backbone(
+                images, return_residual=True)
 
-        ######## Train Face Recognition
+        # Train Face Recognition
         id_loss = F.cross_entropy(self.head(embedding, labels), labels)
         x_age, x_group = self.estimation_network(x_age)
         age_loss = self.compute_age_loss(x_age, x_group, ages)
         da_loss = self.forward_da(x_id, ages)
         gender_loss = F.cross_entropy(self.gender_network(x_residual), genders)
         loss = id_loss + \
-               age_loss * opt.fr_age_loss_weight + \
-               da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight
+            age_loss * opt.fr_age_loss_weight + \
+            da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight
 
         total_loss = loss
         if opt.amp:
@@ -260,7 +243,8 @@ class FR(BasicTask):
         else:
             self.optimizer.step()
 
-        id_loss, da_loss, age_loss, gender_loss = reduce_loss(id_loss, da_loss, age_loss, gender_loss)
+        id_loss, da_loss, age_loss, gender_loss = reduce_loss(
+            id_loss, da_loss, age_loss, gender_loss)
         lr = self.optimizer.param_groups[0]['lr']
         self.logger.msg([id_loss, da_loss, age_loss, gender_loss, lr], n_iter)
         return id_loss, age_loss, gender_loss, total_loss
