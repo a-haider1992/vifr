@@ -14,7 +14,6 @@ from common.ops import load_network, load_network_1
 from .fas import FAS
 from .fr import FR
 from .td_block import TDTask
-from sklearn.metrics.pairwise import cosine_similarity
 
 '''
 python -m torch.distributed.launch --nproc_per_node=8 --master_port=17647 main.py \
@@ -209,6 +208,20 @@ class MTLFace(object):
                            PATH_AGE_ESTIMATION)
                 torch.save(self.fr.gender_network.state_dict(),
                            PATH_GENDER_MODEL)
+                
+    def calculateMetrics(self, a, b):
+        # Compute Euclidean distance
+        euclidean_distance = torch.norm(a - b, p=2)
+
+        # Compute cosine similarity
+        cosine_similarity = F.cosine_similarity(a, b)
+
+        # Compute Pearson correlation coefficient
+        pearson_correlation_coefficient = torch.nn.functional.cross_correlation(a, b)
+
+        # Compute mean squared error
+        mean_squared_error = F.mse_loss(a, b)
+        return euclidean_distance, cosine_similarity, pearson_correlation_coefficient, mean_squared_error
 
     def isSame(self, embed1, embed2):
         # result = torch.eq(embed1, embed2)
@@ -224,13 +237,13 @@ class MTLFace(object):
         # else:
         #     return False
 
-        cosine_sim = cosine_similarity(embed2.detach().cpu().numpy(), 
-                                              embed2.detach().cpu().numpy())
+        # cosine_sim = cosine_similarity(embed2.detach().cpu().numpy(), 
+        #                                       embed2.detach().cpu().numpy())
         
-        sim_threshold = 0.5
+        # sim_threshold = 0.5
         
-        num_correct = (cosine_sim >= sim_threshold).sum().item()
-        cosine_accuracy = num_correct / cosine_sim.shape[0]
+        # num_correct = (cosine_sim >= sim_threshold).sum().item()
+        # cosine_accuracy = num_correct / cosine_sim.shape[0]
 
         similarity_error = torch.mean(torch.abs(embed1 - embed2))
         # normalize the mean absolute difference between 0 and 1
@@ -243,7 +256,7 @@ class MTLFace(object):
         std_a = torch.std(embed1)
         std_b = torch.std(embed2)
         corr_coef = cov / (std_a * std_b)
-        return similarity_error.item(), corr_coef.item(), cosine_accuracy
+        return similarity_error.item(), corr_coef.item()
     
     def checkEq(self, embed1, embed2):
         result = torch.eq(embed1, embed2)
@@ -266,11 +279,10 @@ class MTLFace(object):
         torch.cuda.empty_cache()
         print("MTL Face is under evaluation.")
         self.fr.backbone.eval()
-        total_correct_pred = 0
-        total_incorrect_pred = 0
+        # total_correct_pred = 0
+        # total_incorrect_pred = 0
         total_iter = int(opt.evaluation_num_iter)
-        total_eval_error = 0.0
-        avg_corr = 0.0
+        mean_euc_dis = mean_cos_sim = mean_corr_coeff = mean_mse = 0.0
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image1, image2 = self.fr.prefetcher.next()
@@ -280,22 +292,28 @@ class MTLFace(object):
                 #     total_correct_pred += 1
                 # else:
                 #     total_incorrect_pred += 1
-                similarity_error, mean_corr, cosine_acc = self.isSame(embedding1, embedding2)
-                print(similarity_error)
-                total_eval_error += similarity_error
-                avg_corr += mean_corr
-                if similarity_error <= 1e-4 or mean_corr >= 0.5:
-                    total_correct_pred += 1
-                else:
-                    total_incorrect_pred += 1
-            print("During evaluation, the model corectly predicts {} number of classes.".format(
-                total_correct_pred))
-            print("During evaluation, the model incorrectly predicts {} number of classes.".format(
-                total_incorrect_pred))
-            print(f'Similarity score {total_eval_error / total_iter}')
-            # print("Model Accuracy:{}".format(1 - (total_eval_error / total_iter)))
-            print(f'The mean cosine similarity: {cosine_acc}')
-            print("Average Correlation between prediction and true labels :{}".format(avg_corr / total_iter))
+                # similarity_error, mean_corr, cosine_acc = self.isSame(embedding1, embedding2)
+                euc_dis, cos_sim, corr_coeff, mse = self.calculateMetrics(embedding1, embedding2)
+                mean_euc_dis += euc_dis
+                mean_cos_sim += cos_sim
+                mean_corr_coeff += corr_coeff
+                mean_mse += mse
+                # if similarity_error <= 1e-4 or mean_corr >= 0.5:
+                #     total_correct_pred += 1
+                # else:
+                #     total_incorrect_pred += 1
+            mean_euc_dis, mean_cos_sim, mean_corr_coeff, mean_mse = mean_euc_dis / total_iter, mean_cos_sim / total_iter, mean_corr_coeff / total_iter, mean_mse / total_iter
+            print(f'The mean euclidean distance: {mean_euc_dis}')
+            print(f'The mean cosine similarity: {mean_cos_sim}')
+            print(f'The mean correlation: {mean_corr_coeff}')
+            print(f'The mean MSE: {mean_mse}')
+            # # print("Model Accuracy:{}".format(1 - (total_eval_error / total_iter)))
+            # print(f'The mean cosine similarity: {cosine_acc}')
+            # print("Average Correlation between prediction and true labels :{}".format(avg_corr / total_iter))
+            # print("During evaluation, the model corectly predicts {} number of classes.".format(
+            #     total_correct_pred))
+            # print("During evaluation, the model incorrectly predicts {} number of classes.".format(
+            #     total_incorrect_pred))
         # with torch.no_grad():
         #     for _ in range(0, total_iter):
         #         image, label = self.fr.eval_prefetcher.next()

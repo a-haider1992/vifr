@@ -170,13 +170,12 @@ class RFD(nn.Module):
         #  channel-wise pooling
         concatenated_x = self.channel_reducer(concatenated_x)
         # concatenated_x = concatenated_x[:, :512, :, :]
-        # concatenated_x = F.interpolate(concatenated_x, size=(512, 512), mode='trilinear', align_corners=True)
 
         # Approach 1
-        x_gender = concatenated_x - (x_age + x_id)
+        residual = concatenated_x - (x_age + x_id)
         # Approach 2
         # x_gender = x - x_5
-        return x_gender
+        return residual
 
 
 class AIResNet(IResNet):
