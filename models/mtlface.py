@@ -216,12 +216,16 @@ class MTLFace(object):
         # Compute cosine similarity
         cosine_similarity = F.cosine_similarity(a, b)
 
-        # Compute Pearson correlation coefficient
-        pearson_correlation_coefficient = torch.nn.functional.cross_correlation(a, b)
+        # Compute correlation coefficient
+        cov = torch.mean((a - torch.mean(a)) * (b - torch.mean(b)))
+        std_a = torch.std(a)
+        std_b = torch.std(b)
+        corr_coef = cov / (std_a * std_b)
+        corr_coef = corr_coef.item()
 
         # Compute mean squared error
         mean_squared_error = F.mse_loss(a, b)
-        return euclidean_distance, cosine_similarity, pearson_correlation_coefficient, mean_squared_error
+        return euclidean_distance, cosine_similarity, corr_coef, mean_squared_error
 
     def isSame(self, embed1, embed2):
         # result = torch.eq(embed1, embed2)
