@@ -107,7 +107,7 @@ class FR(BasicTask):
                 # evaluation_loader = torch.utils.data.DataLoader(
                 #     agedb_evaluation_dataset, batch_size=1, num_workers=opt.num_worker)
             else:
-                utk_dataset = UTK(opt.age_protocol + ".csv", agedb_transform)
+                utk_dataset = UTK('UTK.csv', agedb_transform)
                 weights = None
                 sampler = RandomSampler(
                     utk_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
