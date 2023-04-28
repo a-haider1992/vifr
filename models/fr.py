@@ -25,7 +25,7 @@ class FR(BasicTask):
 
     def set_loader(self):
         opt = self.opt
-        if opt.dataset_name == "casia-webface" or opt.dataset_name == "scaf":
+        if opt.dataset_name == "cvfr" or opt.dataset_name == "scaf":
             print("Loading Casia-webface or SCAF dataset..")
             self.train_transform = transforms.Compose(
                 [
@@ -136,12 +136,12 @@ class FR(BasicTask):
             da_discriminator = estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
                                                         hidden_features=opt.vit_hidden_f,
                                                         num_heads=opt.vit_heads, num_layers=opt.vit_blocks, age_group=opt.age_group)
-            optimizer = torch.optim.Adam(list(backbone.parameters()) +
-                                         list(head.parameters()) +
-                                         list(estimation_network.parameters()) +
-                                         list(gender_estimation.parameters()) +
-                                         list(da_discriminator.parameters()),
-                                         lr=opt.learning_rate, betas=(opt.momentum, 0.999))
+            optimizer = torch.optim.SGD(list(backbone.parameters()) +
+                                        list(head.parameters()) +
+                                        list(estimation_network.parameters()) +
+                                        list(gender_estimation.parameters()) +
+                                        list(da_discriminator.parameters()),
+                                        lr=opt.learning_rate, momentum=opt.momentum)
         else:
             estimation_network = AgeEstimationModule(
                 input_size=opt.image_size, age_group=opt.age_group)

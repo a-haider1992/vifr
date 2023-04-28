@@ -73,23 +73,25 @@ class GenderFeatureExtractor(nn.Module):
 class EthnicityFeatureExtractor(nn.Module):
     def __init__(self):
         super(EthnicityFeatureExtractor, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3)
-        self.pool1 = nn.AdaptiveMaxPool2d((64, 64))
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
-        self.pool2 = nn.AdaptiveMaxPool2d((128, 128))
-        self.conv3 = nn.Conv2d(
-            in_channels=128, out_channels=256, kernel_size=3)
-        self.pool3 = nn.AdaptiveMaxPool2d((512, 512))
-        # self.fc1 = nn.Linear(64 * 6 * 6, 128)
-        # self.fc2 = nn.Linear(128, 5)  # 5 possible ethnicities
+        # self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3)
+        # self.pool1 = nn.AdaptiveMaxPool2d((64, 64))
+        # self.conv2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3)
+
+        pool_size = (7, 7)
+        self.pool = nn.AdaptiveMaxPool2d(pool_size)
+        self.bn = nn.BatchNorm2d(num_features=512)
+        self.fc1 = nn.Linear(512 * 7 * 7, 128)
+        self.fc2 = nn.Linear(128, 4)  # 4 possible ethnicities (White, Black, Asian, Indian)
 
     def forward(self, x):
-        x = self.pool1(nn.functional.relu(self.conv1(x)))
-        x = self.pool2(nn.functional.relu(self.conv2(x)))
-        x = self.pool3(nn.functional.relu(self.conv3(x)))
-        # x = x.view(-1, 64 * 6 * 6)
-        # x = nn.functional.relu(self.fc1(x))
-        # x = self.fc2(x)
+        # x = self.pool1(nn.functional.relu(self.conv1(x)))
+        # x = self.pool2(nn.functional.relu(self.conv2(x)))
+        # x = self.pool3(nn.functional.relu(self.conv3(x)))
+        x = self.pool(x)
+        x = self.bn(x)
+        x = x.view(-1, 512 * 7 * 7)
+        x = nn.functional.relu(self.fc1(x))
+        x = self.fc2(x)
         return x
 
 
