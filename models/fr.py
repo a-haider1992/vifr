@@ -136,12 +136,18 @@ class FR(BasicTask):
             da_discriminator = estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
                                                         hidden_features=opt.vit_hidden_f,
                                                         num_heads=opt.vit_heads, num_layers=opt.vit_blocks, age_group=opt.age_group)
-            optimizer = torch.optim.SGD(list(backbone.parameters()) +
+            # optimizer = torch.optim.SGD(list(backbone.parameters()) +
+            #                             list(head.parameters()) +
+            #                             list(estimation_network.parameters()) +
+            #                             list(gender_estimation.parameters()) +
+            #                             list(da_discriminator.parameters()),
+            #                             lr=opt.learning_rate, momentum=opt.momentum)
+            optimizer = torch.optim.Adam(list(backbone.parameters()) +
                                         list(head.parameters()) +
                                         list(estimation_network.parameters()) +
                                         list(gender_estimation.parameters()) +
                                         list(da_discriminator.parameters()),
-                                        lr=opt.learning_rate, momentum=opt.momentum)
+                                        lr=opt.learning_rate, betas=(0.9, 0.999), eps=1e-8)
         else:
             estimation_network = AgeEstimationModule(
                 input_size=opt.image_size, age_group=opt.age_group)
