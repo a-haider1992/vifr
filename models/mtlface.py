@@ -277,8 +277,7 @@ class MTLFace(object):
         self.fr.age_pretrained_eval()
 
     def evaluate_gender_estimation(self):
-        # self.fr.evaluate_gender_model()
-        pass
+        self.fr.evaluate_gender_model()
 
     def evaluate_mtlface(self):
         # evaluate trained model
