@@ -40,6 +40,7 @@ class TrainImageDataset(BaseImageDataset):
         self.classes = np.unique(self.ids)
         self.ages = self.data[:, 2].astype(np.float32)
         self.genders = self.data[:, 3].astype(int)
+        self.races = self.data[:, 4].astype(int)
 
     def __getitem__(self, index):
         img = pil_loader(self.image_list[index])
@@ -47,8 +48,9 @@ class TrainImageDataset(BaseImageDataset):
             img = self.transforms(img)
         age = self.ages[index]
         gender = self.genders[index]
+        race = self.races[index]
         label = self.ids[index]
-        return img, label, age, gender
+        return img, label, age, gender, race
 
 
 class AgingDataset(BaseImageDataset):
