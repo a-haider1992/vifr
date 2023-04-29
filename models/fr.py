@@ -1,21 +1,27 @@
-import torch
-from torchvision import transforms
-import numpy as np
-import torch.nn.functional as F
-import torch.cuda.amp as amp
+import pdb
 
-from common.sampler import RandomSampler
+import numpy as np
+import torch
+import torch.cuda.amp as amp
+import torch.nn.functional as F
+from torchvision import transforms
+
+from backbone.aifr import (AgeEstimationModule, GenderFeatureExtractor,
+                           backbone_dict)
 from common.data_prefetcher import DataPrefetcher
-from common.ops import convert_to_ddp, get_dex_age, age2group, apply_weight_decay, reduce_loss
+from common.dataset import EvaluationImageDataset, TrainImageDataset
+from common.datasetV2 import EvaluationDataset, TrainDataset
+from common.datasetV3 import (UTK, EvaluationData, EvaluationDataAge,
+                              TrainingData, TrainingDataAge)
 from common.grl import GradientReverseLayer
+from common.ops import (age2group, apply_weight_decay, convert_to_ddp,
+                        get_dex_age, reduce_loss)
+from common.sampler import RandomSampler
+from head.arcface import ArcFace
+from head.cosface import CosFace
+
 from . import BasicTask
 from .td_block import ViT
-from backbone.aifr import backbone_dict, AgeEstimationModule, GenderFeatureExtractor
-from head.cosface import CosFace
-from common.dataset import TrainImageDataset, EvaluationImageDataset
-from common.datasetV2 import TrainDataset, EvaluationDataset
-from common.datasetV3 import TrainingData, EvaluationData, TrainingDataAge, EvaluationDataAge, UTK
-import pdb
 
 
 class FR(BasicTask):
@@ -136,6 +142,7 @@ class FR(BasicTask):
             da_discriminator = estimation_network = ViT(image_size=opt.image_size, patch_size=7, num_classes=101,
                                                         hidden_features=opt.vit_hidden_f,
                                                         num_heads=opt.vit_heads, num_layers=opt.vit_blocks, age_group=opt.age_group)
+            # head = ArcFace(in_features=512, out_features=len(self.prefetcher.__loader__.dataset.classes))
             # optimizer = torch.optim.SGD(list(backbone.parameters()) +
             #                             list(head.parameters()) +
             #                             list(estimation_network.parameters()) +
@@ -378,7 +385,7 @@ class FR(BasicTask):
             for _ in range(0, int(opt.evaluation_num_iter)):
                 image, age, gender = self.prefetcher.next()
                 embedding, x_id, x_age, x_gender = self.backbone(
-                    image, return_gender=True)
+                    image, return_residual=True)
                 predicted_sex = self.gender_network(x_gender)
                 predicted_sex = torch.argmax(predicted_sex).item()
                 if predicted_sex == gender.item():
