@@ -243,7 +243,7 @@ class FR(BasicTask):
         da_loss = self.forward_da(x_id, ages)
         gender_loss = F.cross_entropy(self.gender_network(x_residual), genders)
         race_loss = F.cross_entropy(self.race_network(x_residual), races)
-        loss = id_loss + \
+        loss = id_loss * opt.fr_id_loss_weight + \
             age_loss * opt.fr_age_loss_weight + \
             da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight + race_loss * opt.fr_gender_loss_weight
 
