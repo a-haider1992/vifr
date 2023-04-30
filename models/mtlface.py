@@ -128,7 +128,7 @@ class MTLFace(object):
             "--vit_blocks", help='number of VIT blocks', default=2, type=int)
 
         # GENERAL FACE RECOGNITION
-        parser.add_argument("--gfr", help='general face recognition without age',
+        parser.add_argument("--eval_gender", help='evaluate gender network True/False',
                             action='store_true')
         parser.add_argument("--age_protocol",
                             help='Age protocol', type=str)

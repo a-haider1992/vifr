@@ -387,19 +387,29 @@ class FR(BasicTask):
         total_incorrect_pred = 0
         with torch.no_grad():
             for _ in range(0, int(opt.evaluation_num_iter)):
-                image, age, gender = self.prefetcher.next()
-                embedding, x_id, x_age, x_gender = self.backbone(
+                image, age, gender, race = self.prefetcher.next()
+                embedding, x_id, x_age, x_residual = self.backbone(
                     image, return_residual=True)
-                predicted_sex = self.gender_network(x_gender)
-                predicted_sex = torch.argmax(predicted_sex).item()
-                if predicted_sex == gender.item():
-                    total_correct_pred += 1
+                if opt.eval_gender:
+                    predicted_sex = self.gender_network(x_residual)
+                    predicted_sex = torch.argmax(predicted_sex).item()
+                    if predicted_sex == gender.item():
+                        total_correct_pred += 1
+                    else:
+                        total_incorrect_pred += 1
+                        print(f'The predicted sex {predicted_sex}')
+                        print(f'The actual sex {gender.item()}')
                 else:
-                    total_incorrect_pred += 1
-                    print(f'The predicted sex {predicted_sex}')
-                    print(f'The actual sex {gender.item()}')
+                    predicted_race = self.race_network(x_residual)
+                    predicted_race = torch.argmax(predicted_race).item()
+                    if predicted_race == race.item():
+                        total_correct_pred += 1
+                    else:
+                        total_incorrect_pred += 1
+                        print(f'The predicted race {predicted_race}')
+                        print(f'The actual race {race.item()}')
             accuracy = total_correct_pred / \
                 (total_correct_pred+total_incorrect_pred)
             print(f'Total correct predictions are {total_correct_pred}')
             print(f'Total Incorrect predictions are {total_incorrect_pred}')
-            print(f'Accuracy of Age estimation model : {accuracy}')
+            print(f'Accuracy : {accuracy}')

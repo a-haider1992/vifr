@@ -102,6 +102,7 @@ class UTK(tordata.Dataset):
         self.paths = df['path'].to_list()
         self.ages = df['age'].to_list()
         self.genders = df['gender'].to_list()
+        self.races = df['race'].to_list()
         self.images = []
         self.classes = self.paths
         for path in self.paths:
@@ -114,7 +115,8 @@ class UTK(tordata.Dataset):
             image = self.transform(image)
         age = self.ages[index]
         gender = self.genders[index]
-        return image, age, gender
+        race = self.races[index]
+        return image, age, gender, race
     def __len__(self):
         return len(self.images)
 
