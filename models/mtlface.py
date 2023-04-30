@@ -49,7 +49,7 @@ class MTLFace(object):
             if opt.race_pretrained_path is not None and dist.get_rank() == 0:
                 self.fr.race_network.load_state_dict(
                     torch.load(opt.race_pretrained_path))
-            if not opt.evaluation_only and not opt.gfr:
+            if not opt.evaluation_only:
                 self.fas = FAS(opt)
                 self.fas.set_loader()
                 self.fas.set_model()
@@ -182,7 +182,7 @@ class MTLFace(object):
             if opt.train_fr:
                 l1, l2, gl, rl, l3 = self.fr.train(fr_inputs, n_iter)
                 train_losses.write(str(l1)+","+str(l2)+","+str(gl)+","+str(rl)+","+str(l3.item())+"\n")
-            if opt.train_fas and not opt.gfr:
+            if opt.train_fas:
                 # target_img, target_label
                 fas_inputs = self.fas.prefetcher.next()
                 # backbone, age_estimation, source_img, target_img, source_label, target_label
@@ -201,24 +201,18 @@ class MTLFace(object):
         opt = self.opt
         if dist.get_rank() == 0:
             root = os.path.dirname(__file__)
-            if opt.gfr:
-                PATH_AGE_ESTIMATION = os.path.join(
-                    root, 'age_estimation_model_fine_tuned.pt')
-                torch.save(self.fr.estimation_network.state_dict(),
-                           PATH_AGE_ESTIMATION)
-            else:
-                PATH_BACKBONE = os.path.join(root, 'backbone.pt')
-                PATH_AGE_ESTIMATION = os.path.join(
-                    root, 'age_estimation_model.pt')
-                PATH_GENDER_MODEL = os.path.join(root, 'gender_model.pt')
-                PATH_RACE_MODEL = os.path.join(root, 'race_model.pt')
-                torch.save(self.fr.backbone.state_dict(), PATH_BACKBONE)
-                torch.save(self.fr.estimation_network.state_dict(),
-                           PATH_AGE_ESTIMATION)
-                torch.save(self.fr.gender_network.state_dict(),
-                           PATH_GENDER_MODEL)
-                torch.save(self.fr.race_network.state_dict(),
-                           PATH_RACE_MODEL)
+            PATH_BACKBONE = os.path.join(root, 'backbone.pt')
+            PATH_AGE_ESTIMATION = os.path.join(
+                root, 'age_estimation_model.pt')
+            PATH_GENDER_MODEL = os.path.join(root, 'gender_model.pt')
+            PATH_RACE_MODEL = os.path.join(root, 'race_model.pt')
+            torch.save(self.fr.backbone.state_dict(), PATH_BACKBONE)
+            torch.save(self.fr.estimation_network.state_dict(),
+                        PATH_AGE_ESTIMATION)
+            torch.save(self.fr.gender_network.state_dict(),
+                        PATH_GENDER_MODEL)
+            torch.save(self.fr.race_network.state_dict(),
+                        PATH_RACE_MODEL)
                 
     def calculateMetrics(self, a, b):
         # Compute Euclidean distance
