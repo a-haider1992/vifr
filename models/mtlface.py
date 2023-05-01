@@ -148,6 +148,9 @@ class MTLFace(object):
             "--evaluation_only", help='Evaluate the trained models', action='store_true')
         parser.add_argument(
             "--fine_tune", help='Fine tune the pre-trained models', action='store_true')
+        parser.add_argument("--utk_eval_file",
+                            help='UTK dataset evaluation file', type=str)
+        
 
         # FAS
         parser.add_argument("--d_lr", help='learning-rate',
