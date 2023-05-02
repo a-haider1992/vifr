@@ -77,11 +77,13 @@ class MTLFace(object):
 
         # LOSS
         parser.add_argument("--fr_id_loss_weight",
-                            help='id loss weight', type=float, default=1.05)
+                            help='id loss weight', type=float, default=1.0)
         parser.add_argument("--fr_age_loss_weight",
                             help='age loss weight', type=float, default=0.0)
         parser.add_argument("--fr_gender_loss_weight",
                             help='gender loss weight', type=float, default=0.0)
+        parser.add_argument("--fr_race_loss_weight",
+                            help='race loss weight', type=float, default=0.0)
         parser.add_argument("--fr_da_loss_weight", help='cross age domain adaption loss weight', type=float,
                             default=0.0)
         parser.add_argument("--age_group", help='age_group',

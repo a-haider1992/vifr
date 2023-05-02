@@ -245,7 +245,7 @@ class FR(BasicTask):
         race_loss = F.cross_entropy(self.race_network(x_residual), races)
         loss = id_loss * opt.fr_id_loss_weight + \
             age_loss * opt.fr_age_loss_weight + \
-            da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight + race_loss * opt.fr_gender_loss_weight
+            da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight + race_loss * opt.fr_race_loss_weight
 
         total_loss = loss
         if opt.amp:
