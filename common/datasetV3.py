@@ -57,11 +57,10 @@ class Casia(tordata.Dataset):
         self.transform = transform
         self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'casia-webface')
         df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
-        self.names = df['name'].to_list()
         image1 = df['img_num1'].to_list()
         image2 = df['img_num2'].to_list()
         self.images = {}
-        self.classes = self.names
+        self.classes = image1
         for idx in range(0, len(image1)):
             self.images[idx] = [os.path.join(self.root, image1[idx]), os.path.join(self.root, image2[idx])]
         # for idx in range(0, len(images_)):
