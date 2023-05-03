@@ -50,6 +50,34 @@ class LFWDataset(tordata.Dataset):
         return image1, image2
     def __len__(self):
         return len(self.images)
+    
+
+class Casia(tordata.Dataset):
+    def __init__(self, file, transform=None):
+        self.transform = transform
+        self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'casia-webface')
+        df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
+        self.names = df['name'].to_list()
+        image1 = df['img_num1'].to_list()
+        image2 = df['img_num2'].to_list()
+        self.images = {}
+        self.classes = self.names
+        for idx in range(0, len(image1)):
+            self.images[idx] = [os.path.join(self.root, image1[idx]), os.path.join(self.root, image2[idx])]
+        # for idx in range(0, len(images_)):
+        #     self.images.append(os.path.join(self.root, self.names[idx], images_[idx]))
+        # self.labels = df['encoded_name'].astype(int).to_list()
+        # self.classes = np.unique(self.labels)
+        
+    def __getitem__(self, index):
+        image1 = pil_loader(self.images[index][0])
+        image2 = pil_loader(self.images[index][1])
+        if self.transform is not None:
+            image1 = self.transform(image1)
+            image2 = self.transform(image2)
+        return image1, image2
+    def __len__(self):
+        return len(self.images)
 
 class TrainingData(LFWDataset):
     def __init__(self, file, transform):

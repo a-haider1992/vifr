@@ -12,7 +12,7 @@ from common.data_prefetcher import DataPrefetcher
 from common.dataset import EvaluationImageDataset, TrainImageDataset
 from common.datasetV2 import EvaluationDataset, TrainDataset
 from common.datasetV3 import (UTK, EvaluationData, EvaluationDataAge,
-                              TrainingData, TrainingDataAge)
+                              TrainingData, TrainingDataAge, Casia)
 from common.grl import GradientReverseLayer
 from common.ops import (age2group, apply_weight_decay, convert_to_ddp,
                         get_dex_age, reduce_loss)
@@ -87,7 +87,7 @@ class FR(BasicTask):
                                                         drop_last=True)
             elif opt.dataset_name == "casia":
                 torch.cuda.empty_cache()
-                casia_dataset = TrainingData('casia.csv', lfw_transform)
+                casia_dataset = Casia('casia.csv', lfw_transform)
                 weights = None
                 sampler_casia = RandomSampler(
                     casia_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
