@@ -62,7 +62,9 @@ class Casia(tordata.Dataset):
         self.images = {}
         self.classes = image1
         for idx in range(0, len(image1)):
-            self.images[idx] = [os.path.join(self.root, image1[idx]), os.path.join(self.root, image2[idx])]
+            img1 = image1[idx].split("\\")
+            img2 = image2[idx].split("\\")
+            self.images[idx] = [os.path.join(self.root, img1[0], img1[1]), os.path.join(self.root, img2[0], img2[1])]
         # for idx in range(0, len(images_)):
         #     self.images.append(os.path.join(self.root, self.names[idx], images_[idx]))
         # self.labels = df['encoded_name'].astype(int).to_list()
