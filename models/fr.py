@@ -32,7 +32,7 @@ class FR(BasicTask):
     def set_loader(self):
         opt = self.opt
         if opt.dataset_name == "cvfr" or opt.dataset_name == "scaf":
-            print("Loading Casia-webface or SCAF dataset..")
+            print("Loading CVFR or SCAF dataset..")
             self.train_transform = transforms.Compose(
                 [
                     transforms.RandomHorizontalFlip(),
@@ -64,9 +64,9 @@ class FR(BasicTask):
             #                                                 batch_size=opt.eval_batch_size, pin_memory=True,
             #                                                 num_workers=opt.num_worker)
 
-        elif opt.dataset_name == "lfw":
+        elif opt.dataset_name == "lfw" or opt.dataset_name == "casia":
             # LFW dataset
-            print("Loading LFW dataset..")
+            print("Loading LFW dataset or CASIA-WebFACE..")
             lfw_transform = transforms.Compose(
                 [
                     transforms.RandomHorizontalFlip(),
@@ -74,21 +74,27 @@ class FR(BasicTask):
                     transforms.ToTensor(),
                     transforms.Normalize(mean=[0.5, ], std=[0.5, ])
                 ])
-
-            torch.cuda.empty_cache()
-            train_lfw_dataset = TrainingData('pairs.csv', lfw_transform)
-            # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
-            weights = None
-            sampler_lfw = RandomSampler(
-                train_lfw_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
-            train_loader = torch.utils.data.DataLoader(train_lfw_dataset,
-                                                       batch_size=opt.batch_size,
-                                                       sampler=sampler_lfw, pin_memory=True, num_workers=opt.num_worker,
-                                                       drop_last=True)
-            print(
-                f"GPU memory allocated after loading data: {torch.cuda.memory_allocated()} bytes")
-            # evaluation_loader = torch.utils.data.DataLoader(
-            #     test_lfw_dataset, num_workers=opt.num_worker)
+            if opt.dataset_name == "lfw":
+                torch.cuda.empty_cache()
+                train_lfw_dataset = TrainingData('pairs.csv', lfw_transform)
+                # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
+                weights = None
+                sampler_lfw = RandomSampler(
+                    train_lfw_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
+                train_loader = torch.utils.data.DataLoader(train_lfw_dataset,
+                                                        batch_size=opt.batch_size,
+                                                        sampler=sampler_lfw, pin_memory=True, num_workers=opt.num_worker,
+                                                        drop_last=True)
+            elif opt.dataset_name == "casia":
+                torch.cuda.empty_cache()
+                casia_dataset = TrainingData('casia.csv', lfw_transform)
+                weights = None
+                sampler_casia = RandomSampler(
+                    casia_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
+                train_loader = torch.utils.data.DataLoader(casia_dataset,
+                                                        batch_size=opt.batch_size,
+                                                        sampler=sampler_casia, pin_memory=True, num_workers=opt.num_worker,
+                                                        drop_last=True)
         elif opt.dataset_name == "UTK" or opt.dataset_name == "AgeDB":
             print("Loading AgeDB or UTK dataset..")
             agedb_transform = transforms.Compose([
