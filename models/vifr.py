@@ -1,6 +1,5 @@
 ﻿## VIFR model contains Age Estimation TD module
 ## Moreover, an MTL estimation model for TID tasks
-## Author: Abbas Haider
 ## Date: 14 Jan 2023
 
 from . import TDBlock, TIDBlock

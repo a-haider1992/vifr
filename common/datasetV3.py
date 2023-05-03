@@ -1,5 +1,4 @@
-﻿## Author: Abbas Haider
-## Date: 06 Feb 2023
+﻿## Date: 06 Feb 2023
 
 import torch.utils.data as tordata
 import os.path as osp

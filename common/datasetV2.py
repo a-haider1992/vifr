@@ -1,5 +1,4 @@
-﻿## Author: Abbas Haider
-## Date: 13 Jan 2023
+﻿## Date: 13 Jan 2023
 
 import numpy as np
 import torch.utils.data as tordata
