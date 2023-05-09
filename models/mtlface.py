@@ -288,6 +288,8 @@ class MTLFace(object):
 
     def evaluate_mtlface(self):
         # evaluate trained model
+        import matplotlib.pyplot as plt
+        from skimage.io import imsave
         opt = self.opt
         torch.cuda.empty_cache()
         print("MTL Face is under evaluation.")
@@ -299,8 +301,12 @@ class MTLFace(object):
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image1, image2 = self.fr.prefetcher.next()
-                embedding1 = self.fr.backbone(image1)
-                embedding2 = self.fr.backbone(image2)
+                embedding1, x_id1, x_age1, x_residual1 = self.backbone(
+                    image1, return_residual=True)
+                embedding2, x_id2, x_age2, x_residual2 = self.backbone(
+                    image2, return_residual=True)
+                # embedding1 = self.fr.backbone(image1)
+                # embedding2 = self.fr.backbone(image2)
                 # if self.checkEq(embedding1, embedding2):
                 #     total_correct_pred += 1
                 # else:
@@ -320,6 +326,14 @@ class MTLFace(object):
             print(f'The mean cosine similarity: {mean_cos_sim}')
             print(f'The mean correlation: {mean_corr_coeff}')
             print(f'The mean MSE: {mean_mse}')
+            imsave('embed1.jpg', embedding1)
+            imsave('embed2.jpg', embedding2)
+            imsave('age_1.jpg', x_age1)
+            imsave('age_2.jpg', x_age2)
+            imsave('id_1.jpg', x_id1)
+            imsave('id_2.jpg', x_id2)
+            imsave('residual_1.jpg', x_residual1)
+            imsave('residual_2.jpg', x_residual2)
             # # print("Model Accuracy:{}".format(1 - (total_eval_error / total_iter)))
             # print(f'The mean cosine similarity: {cosine_acc}')
             # print("Average Correlation between prediction and true labels :{}".format(avg_corr / total_iter))
