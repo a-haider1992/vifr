@@ -338,7 +338,7 @@ class MTLFace(object):
                 transforms.ToPILImage(),
                 transforms.Resize((112, 112))
             ])
-            x = x_age2
+            x = x_residual2
             for i in range(x.shape[1] // 3):
                 if i > 5:
                     break
