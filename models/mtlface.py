@@ -334,10 +334,17 @@ class MTLFace(object):
             print(f'Residual shape : {x_residual1.shape}')
             print(f'Id shape : {x_id1.shape}')
 
-            pil_image = transforms.ToPILImage()(x1.squeeze())
-
-            # Display or save PIL image using other PIL functions
-            pil_image.save('x1.jpg')
+            transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.Resize((112, 112)),
+                transforms.ToTensor()
+            ])
+            x = x_age1
+            for i in range(x.shape[1] // 3):
+                start_channel = i * 3
+                end_channel = start_channel + 3
+                img = transform(x[:, start_channel:end_channel, :, :].squeeze())
+                img.save(f"tensor_image_{i}.png")
 
             # x_age1 = x_age1.flatten()
             # encoded_array = x_age1.view(112, -1).cpu().numpy()
