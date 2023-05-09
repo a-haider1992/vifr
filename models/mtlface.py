@@ -336,8 +336,7 @@ class MTLFace(object):
 
             transform = transforms.Compose([
                 transforms.ToPILImage(),
-                transforms.Resize((112, 112)),
-                transforms.ToTensor()
+                transforms.Resize((112, 112))
             ])
             x = x_age1
             for i in range(x.shape[1] // 3):
