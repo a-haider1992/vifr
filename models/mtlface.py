@@ -334,7 +334,7 @@ class MTLFace(object):
             print(f'Residual shape : {x_residual1.shape}')
             print(f'Id shape : {x_id1.shape}')
 
-            pil_image = transforms.ToPILImage()(x_age1)
+            pil_image = transforms.ToPILImage()(x_age1.squeeze())
 
             # Display or save PIL image using other PIL functions
             pil_image.save('age1.jpg')
