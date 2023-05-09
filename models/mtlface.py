@@ -302,10 +302,10 @@ class MTLFace(object):
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image1, image2 = self.fr.prefetcher.next()
-                embedding1, x_id1, x_age1, x_residual1 = self.fr.backbone(
-                    image1, return_residual=True)
-                embedding2, x_id2, x_age2, x_residual2 = self.fr.backbone(
-                    image2, return_residual=True)
+                # embedding1, x_id1, x_age1, x_residual1 = self.fr.backbone(
+                #     image1, return_residual=True)
+                # embedding2, x_id2, x_age2, x_residual2 = self.fr.backbone(
+                #     image2, return_residual=True)
                 x1, x2, x3, x4, x5, _, _ = self.fr.backbone(
                     image2, return_shortcuts=True)
                 # embedding1 = self.fr.backbone(image1)
@@ -315,30 +315,30 @@ class MTLFace(object):
                 # else:
                 #     total_incorrect_pred += 1
                 # similarity_error, mean_corr, cosine_acc = self.isSame(embedding1, embedding2)
-                euc_dis, cos_sim, corr_coeff, mse = self.calculateMetrics(embedding1, embedding2)
-                mean_euc_dis += euc_dis
-                mean_cos_sim += cos_sim
-                mean_corr_coeff += corr_coeff
-                mean_mse += mse
+                # euc_dis, cos_sim, corr_coeff, mse = self.calculateMetrics(embedding1, embedding2)
+                # mean_euc_dis += euc_dis
+                # mean_cos_sim += cos_sim
+                # mean_corr_coeff += corr_coeff
+                # mean_mse += mse
                 # if similarity_error <= 1e-4 or mean_corr >= 0.5:
                 #     total_correct_pred += 1
                 # else:
                 #     total_incorrect_pred += 1
-            mean_euc_dis, mean_cos_sim, mean_corr_coeff, mean_mse = mean_euc_dis / total_iter, mean_cos_sim / total_iter, mean_corr_coeff / total_iter, mean_mse / total_iter
-            print(f'The mean euclidean distance: {mean_euc_dis}')
-            print(f'The mean cosine similarity: {mean_cos_sim}')
-            print(f'The mean correlation: {mean_corr_coeff}')
-            print(f'The mean MSE: {mean_mse}')
-            print(f'Embedding1 shape : {embedding1.shape}')
-            print(f'Age shape : {x_age1.shape}')
-            print(f'Residual shape : {x_residual1.shape}')
-            print(f'Id shape : {x_id1.shape}')
+            # mean_euc_dis, mean_cos_sim, mean_corr_coeff, mean_mse = mean_euc_dis / total_iter, mean_cos_sim / total_iter, mean_corr_coeff / total_iter, mean_mse / total_iter
+            # print(f'The mean euclidean distance: {mean_euc_dis}')
+            # print(f'The mean cosine similarity: {mean_cos_sim}')
+            # print(f'The mean correlation: {mean_corr_coeff}')
+            # print(f'The mean MSE: {mean_mse}')
+            # print(f'Embedding1 shape : {embedding1.shape}')
+            # print(f'Age shape : {x_age1.shape}')
+            # print(f'Residual shape : {x_residual1.shape}')
+            # print(f'Id shape : {x_id1.shape}')
 
             transform = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.Resize((112, 112))
             ])
-            x = x2
+            x = x1
             for i in range(x.shape[1] // 3):
                 if i > 5:
                     break
