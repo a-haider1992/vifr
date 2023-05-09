@@ -329,7 +329,7 @@ class MTLFace(object):
             print(f'Embedding1 shape : {embedding1.shape}')
             # embedding1 = embedding1.reshape((opt.batch_size, 3, opt.image_size, opt.image_size))
             embedding1 = embedding1.cpu().numpy()
-            imsave('embed1.jpg', embedding1)
+            imsave('embed1.png', embedding1)
             # imsave('embed2.jpg', embedding2)
             # imsave('age_1.jpg', x_age1)
             # imsave('age_2.jpg', x_age2)
