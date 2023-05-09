@@ -309,7 +309,7 @@ class MTLFace(object):
                 embedding2, x_id2, x_age2 = self.fr.backbone(
                     image2, return_age=True)
                 x1, x2, x3, x4, x5, _, _ = self.fr.backbone(
-                    image2, return_shortcuts=True)
+                    image1, return_shortcuts=True)
                 # embedding1 = self.fr.backbone(image1)
                 # embedding2 = self.fr.backbone(image2)
                 # if self.checkEq(embedding1, embedding2):
@@ -340,7 +340,7 @@ class MTLFace(object):
                 transforms.ToPILImage(),
                 transforms.Resize((112, 112))
             ])
-            x = x_id2
+            x = x1
             for i in range(x.shape[1] // 3):
                 if i > 5:
                     break
