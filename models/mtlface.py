@@ -304,8 +304,10 @@ class MTLFace(object):
                 image1, image2 = self.fr.prefetcher.next()
                 # embedding1, x_id1, x_age1, x_residual1 = self.fr.backbone(
                 #     image1, return_residual=True)
-                embedding2, x_id2, x_age2, x_residual2 = self.fr.backbone(
-                    image2, return_residual=True)
+                # embedding2, x_id2, x_age2, x_residual2 = self.fr.backbone(
+                #     image2, return_residual=True)
+                embedding2, x_id2, x_age2 = self.fr.backbone(
+                    image2, return_age=True)
                 x1, x2, x3, x4, x5, _, _ = self.fr.backbone(
                     image2, return_shortcuts=True)
                 # embedding1 = self.fr.backbone(image1)
@@ -338,7 +340,7 @@ class MTLFace(object):
                 transforms.ToPILImage(),
                 transforms.Resize((112, 112))
             ])
-            x = x_residual2
+            x = x_id2
             for i in range(x.shape[1] // 3):
                 if i > 5:
                     break
