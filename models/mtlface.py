@@ -301,9 +301,9 @@ class MTLFace(object):
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image1, image2 = self.fr.prefetcher.next()
-                embedding1, x_id1, x_age1, x_residual1 = self.backbone(
+                embedding1, x_id1, x_age1, x_residual1 = self.fr.backbone(
                     image1, return_residual=True)
-                embedding2, x_id2, x_age2, x_residual2 = self.backbone(
+                embedding2, x_id2, x_age2, x_residual2 = self.fr.backbone(
                     image2, return_residual=True)
                 # embedding1 = self.fr.backbone(image1)
                 # embedding2 = self.fr.backbone(image2)
