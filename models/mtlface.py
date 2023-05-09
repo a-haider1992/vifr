@@ -340,6 +340,8 @@ class MTLFace(object):
             ])
             x = x_age1
             for i in range(x.shape[1] // 3):
+                if i > 5:
+                    break
                 start_channel = i * 3
                 end_channel = start_channel + 3
                 img = transform(x[:, start_channel:end_channel, :, :].squeeze())
