@@ -332,9 +332,9 @@ class MTLFace(object):
             print(f'Id shape : {x_id1.shape}')
             encoded_array = x_age1.reshape((7, 7, 512)).cpu().numpy()
             # encoded_array = (encoded_array - np.min(encoded_array)) / (np.max(encoded_array) - np.min(encoded_array)) * 255
-            encoded_image = Image.fromarray(encoded_array.astype(np.uint8), mode='RGB')
+            # encoded_image = Image.fromarray(encoded_array.astype(np.uint8), mode='RGB')
             # encoded_image.save('age1.jpg')
-            imsave('age1.png', encoded_image)
+            imsave('age1.png', encoded_array)
             # imsave('embed2.jpg', embedding2)
             # imsave('age_1.jpg', x_age1)
             # imsave('age_2.jpg', x_age2)
