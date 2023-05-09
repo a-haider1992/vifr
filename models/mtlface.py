@@ -288,8 +288,8 @@ class MTLFace(object):
 
     def evaluate_mtlface(self):
         # evaluate trained model
-        import matplotlib.pyplot as plt
-        from skimage.io import imsave
+        # from skimage.io import imsave
+        from PIL import Image
         opt = self.opt
         torch.cuda.empty_cache()
         print("MTL Face is under evaluation.")
@@ -327,9 +327,13 @@ class MTLFace(object):
             print(f'The mean correlation: {mean_corr_coeff}')
             print(f'The mean MSE: {mean_mse}')
             print(f'Embedding1 shape : {embedding1.shape}')
-            # embedding1 = embedding1.reshape((opt.batch_size, 3, opt.image_size, opt.image_size))
-            embedding1 = embedding1.cpu().numpy()
-            imsave('embed1.png', embedding1)
+            print(f'Age shape : {x_age1.shape}')
+            print(f'Residual shape : {x_residual1.shape}')
+            print(f'Id shape : {x_id1.shape}')
+            embedding1 = embedding1.reshape((16, 32)).cpu().numpy()
+            embedding1 = Image.fromarray(embedding1.astype(np.uint8), mode='L')
+            embedding1.save('embed1.png')
+            # imsave('embed1.png', embedding1)
             # imsave('embed2.jpg', embedding2)
             # imsave('age_1.jpg', x_age1)
             # imsave('age_2.jpg', x_age2)
