@@ -307,7 +307,7 @@ class MTLFace(object):
                 # embedding2, x_id2, x_age2, x_residual2 = self.fr.backbone(
                 #     image2, return_residual=True)
                 embedding2, x_id2, x_age2 = self.fr.backbone(
-                    image1, return_age=True)
+                    image2, return_age=True)
                 x1, x2, x3, x4, x5, _, _ = self.fr.backbone(
                     image1, return_shortcuts=True)
                 # embedding1 = self.fr.backbone(image1)
