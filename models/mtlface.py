@@ -290,9 +290,9 @@ class MTLFace(object):
 
     def evaluate_mtlface(self):
         # evaluate trained model
-        from skimage.io import imsave
-        from PIL import Image
-        import torchvision.transforms as transforms
+        # from skimage.io import imsave
+        # from PIL import Image
+        # import torchvision.transforms as transforms
         opt = self.opt
         torch.cuda.empty_cache()
         print("MTL Face is under evaluation.")
