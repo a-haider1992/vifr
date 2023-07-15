@@ -147,6 +147,10 @@ class MTLFace(object):
                             help='Batch size of evaluation', default=1, type=int)
         parser.add_argument("--lfw_mode",
                             help='LFW evaluation mode (same/different)', default=0, type=int)
+        parser.add_argument("--lfw_sim_thresh",
+                            help='LFW similarity Threshold', default=0.8, type=float)
+        parser.add_argument("--lfw_disim_thresh",
+                            help='LFW dissimilarity Threshold', default=0.3, type=float)
         parser.add_argument(
             "--evaluation_only", help='Evaluate the trained models', action='store_true')
         parser.add_argument(
@@ -329,12 +333,12 @@ class MTLFace(object):
                 # else:
                 #     total_incorrect_pred += 1
                 if opt.lfw_mode == 0:
-                    if mean_cos_sim >= 0.8:
+                    if mean_cos_sim >= opt.lfw_sim_thresh:
                         total_correct_pred += 1
                     else:
                         total_incorrect_pred += 1
                 elif opt.lfw_mode == 1:
-                    if mean_cos_sim <= 0.3:
+                    if mean_cos_sim <= opt.lfw_disim_thresh:
                         total_correct_pred += 1
                     else:
                         total_incorrect_pred += 1
