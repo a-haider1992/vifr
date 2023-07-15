@@ -7,7 +7,6 @@ import torch
 import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
-import tqdm
 
 from common.ops import load_network, load_network_1
 
@@ -179,6 +178,7 @@ class MTLFace(object):
         return parser
 
     def fit(self):
+        import tqdm
         opt = self.opt
         # training routine
         train_losses = open('training_loss.csv', 'w')
