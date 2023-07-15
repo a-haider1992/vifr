@@ -184,7 +184,7 @@ class AIResNet(IResNet):
     def __init__(self, input_size, num_layers, mode='ir', **kwargs):
         super(AIResNet, self).__init__(input_size, num_layers, mode)
         self.fsm = AttentionModule()
-        self.rfd = RFD()
+        # self.rfd = RFD()
         self.output_layer = nn.Sequential(
             nn.BatchNorm2d(512),
             nn.Dropout(),
@@ -207,9 +207,9 @@ class AIResNet(IResNet):
             return x_1, x_2, x_3, x_4, x_5, x_id, x_age
         if return_age:
             return embedding, x_id, x_age
-        if return_residual:
-            x_residual = self.rfd(x_2, x_3, x_4, x_5, x_id, x_age)
-            return embedding, x_id, x_age, x_residual
+        # if return_residual:
+        #     x_residual = self.rfd(x_2, x_3, x_4, x_5, x_id, x_age)
+        #     return embedding, x_id, x_age, x_residual
         return embedding
 
 
