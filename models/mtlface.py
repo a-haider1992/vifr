@@ -333,12 +333,12 @@ class MTLFace(object):
                 # else:
                 #     total_incorrect_pred += 1
                 if opt.lfw_mode == 0:
-                    if mean_cos_sim >= opt.lfw_sim_thresh:
+                    if cos_sim >= opt.lfw_sim_thresh:
                         total_correct_pred += 1
                     else:
                         total_incorrect_pred += 1
                 elif opt.lfw_mode == 1:
-                    if mean_cos_sim <= opt.lfw_disim_thresh:
+                    if cos_sim <= opt.lfw_disim_thresh:
                         total_correct_pred += 1
                     else:
                         total_incorrect_pred += 1
