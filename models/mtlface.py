@@ -328,10 +328,16 @@ class MTLFace(object):
                 #     total_correct_pred += 1
                 # else:
                 #     total_incorrect_pred += 1
-                if mean_cos_sim >= 0.9:
-                    total_correct_pred += 1
-                else:
-                    total_incorrect_pred += 1
+                if opt.lfw_mode == 0:
+                    if mean_cos_sim >= 0.8:
+                        total_correct_pred += 1
+                    else:
+                        total_incorrect_pred += 1
+                elif opt.lfw_mode == 1:
+                    if mean_cos_sim <= 0.3:
+                        total_correct_pred += 1
+                    else:
+                        total_incorrect_pred += 1
             if opt.lfw_mode == 0:
                 # True or same samples
                 true_negatives = total_incorrect_pred
