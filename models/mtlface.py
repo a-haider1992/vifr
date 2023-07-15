@@ -328,7 +328,7 @@ class MTLFace(object):
                 #     total_correct_pred += 1
                 # else:
                 #     total_incorrect_pred += 1
-                if mean_cos_sim < 0.8:
+                if mean_cos_sim >= 0.6:
                     total_correct_pred += 1
                 else:
                     total_incorrect_pred += 1
