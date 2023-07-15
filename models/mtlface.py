@@ -345,8 +345,8 @@ class MTLFace(object):
                 print(f'The same LFW samples got {true_negatives} True Negatives, and {true_positives} True Positives')
             elif opt.lfw_mode == 1:
                 # False or different samples
-                false_negatives = total_incorrect_pred
-                false_positives = total_correct_pred
+                false_positives = total_incorrect_pred
+                false_negatives = total_correct_pred
                 print(f'The different LFW samples got {false_negatives} False Negatives, and {false_positives} False Positives')
             # mean_euc_dis, mean_cos_sim, mean_corr_coeff, mean_mse = mean_euc_dis / total_iter, mean_cos_sim / total_iter, mean_corr_coeff / total_iter, mean_mse / total_iter
             # print(f'The mean euclidean distance: {mean_euc_dis}')
