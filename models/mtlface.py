@@ -37,16 +37,16 @@ class MTLFace(object):
         self.fr.set_loader()
         self.fr.set_model()
         if opt.train_fas:
-            if opt.id_pretrained_path is not None and dist.get_rank() == 0:
+            if opt.id_pretrained_path is not None:
                 self.fr.backbone.load_state_dict(
                     torch.load(opt.id_pretrained_path))
-            if opt.age_pretrained_path is not None and dist.get_rank() == 0:
+            if opt.age_pretrained_path is not None:
                 self.fr.estimation_network.load_state_dict(
                     torch.load(opt.age_pretrained_path))
-            if opt.gender_pretrained_path is not None and dist.get_rank() == 0:
+            if opt.gender_pretrained_path is not None:
                 self.fr.gender_network.load_state_dict(
                     torch.load(opt.gender_pretrained_path))
-            if opt.race_pretrained_path is not None and dist.get_rank() == 0:
+            if opt.race_pretrained_path is not None:
                 self.fr.race_network.load_state_dict(
                     torch.load(opt.race_pretrained_path))
             if not opt.evaluation_only:
