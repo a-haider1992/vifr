@@ -11,7 +11,8 @@ from torchvision.utils import save_image
 import torch.distributed as dist
 import math
 import inspect
-from torch._six import container_abcs, string_classes
+# from torch._six import container_abcs, string_classes
+from collections.abc import Mapping, Sequence
 import warnings
 
 
@@ -212,11 +213,11 @@ def convert_to_cuda(data):
     elem_type = type(data)
     if isinstance(data, torch.Tensor):
         return data.cuda(non_blocking=True)
-    elif isinstance(data, container_abcs.Mapping):
+    elif isinstance(data, Mapping):
         return {key: convert_to_cuda(data[key]) for key in data}
     elif isinstance(data, tuple) and hasattr(data, '_fields'):  # namedtuple
         return elem_type(*(convert_to_cuda(d) for d in data))
-    elif isinstance(data, container_abcs.Sequence) and not isinstance(data, string_classes):
+    elif isinstance(data, Sequence) and not isinstance(data, str):
         return [convert_to_cuda(d) for d in data]
     else:
         return data
