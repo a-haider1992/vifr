@@ -146,6 +146,8 @@ class MTLFace(object):
                             help='Number of evaluation epochs', default=5, type=int)
         parser.add_argument("--eval_batch_size",
                             help='Batch size of evaluation', default=1, type=int)
+        parser.add_argument("--lfw_mode",
+                            help='LFW evaluation mode (same/different)', default=0, type=int)
         parser.add_argument(
             "--evaluation_only", help='Evaluate the trained models', action='store_true')
         parser.add_argument(
@@ -295,21 +297,21 @@ class MTLFace(object):
         torch.cuda.empty_cache()
         print("MTL Face is under evaluation.")
         self.fr.backbone.eval()
-        # total_correct_pred = 0
-        # total_incorrect_pred = 0
+        total_correct_pred = 0
+        total_incorrect_pred = 0
         total_iter = int(opt.evaluation_num_iter)
         mean_euc_dis = mean_cos_sim = mean_corr_coeff = mean_mse = 0.0
         with torch.no_grad():
             for _ in range(0, total_iter):
                 image1, image2 = self.fr.prefetcher.next()
-                # embedding1, x_id1, x_age1, x_residual1 = self.fr.backbone(
-                #     image1, return_residual=True)
-                # embedding2, x_id2, x_age2, x_residual2 = self.fr.backbone(
-                #     image2, return_residual=True)
-                embedding2, x_id2, x_age2 = self.fr.backbone(
-                    image2, return_age=True)
-                x1, x2, x3, x4, x5, _, _ = self.fr.backbone(
-                    image2, return_shortcuts=True)
+                embedding1, x_id1, x_age1, x_residual1 = self.fr.backbone(
+                    image1, return_residual=True)
+                embedding2, x_id2, x_age2, x_residual2 = self.fr.backbone(
+                    image2, return_residual=True)
+                # embedding2, x_id2, x_age2 = self.fr.backbone(
+                #     image2, return_age=True)
+                # x1, x2, x3, x4, x5, _, _ = self.fr.backbone(
+                #     image2, return_shortcuts=True)
                 # embedding1 = self.fr.backbone(image1)
                 # embedding2 = self.fr.backbone(image2)
                 # if self.checkEq(embedding1, embedding2):
@@ -317,15 +319,29 @@ class MTLFace(object):
                 # else:
                 #     total_incorrect_pred += 1
                 # similarity_error, mean_corr, cosine_acc = self.isSame(embedding1, embedding2)
-                # euc_dis, cos_sim, corr_coeff, mse = self.calculateMetrics(embedding1, embedding2)
-                # mean_euc_dis += euc_dis
-                # mean_cos_sim += cos_sim
-                # mean_corr_coeff += corr_coeff
-                # mean_mse += mse
+                euc_dis, cos_sim, corr_coeff, mse = self.calculateMetrics(embedding1, embedding2)
+                mean_euc_dis += euc_dis
+                mean_cos_sim += cos_sim
+                mean_corr_coeff += corr_coeff
+                mean_mse += mse
                 # if similarity_error <= 1e-4 or mean_corr >= 0.5:
                 #     total_correct_pred += 1
                 # else:
                 #     total_incorrect_pred += 1
+                if mean_cos_sim < 0.8:
+                    total_correct_pred += 1
+                else:
+                    total_incorrect_pred += 1
+            if opt.lfw_mode == 0:
+                # True or same samples
+                true_negatives = total_incorrect_pred
+                true_positives = total_correct_pred
+                print(f'The same LFW samples got {true_negatives} True Negatives, and {true_positives} True Positives')
+            elif opt.lfw_mode == 1:
+                # False or different samples
+                false_negatives = total_incorrect_pred
+                false_positives = total_correct_pred
+                print(f'The different LFW samples got {false_negatives} False Negatives, and {false_positives} False Positives')
             # mean_euc_dis, mean_cos_sim, mean_corr_coeff, mean_mse = mean_euc_dis / total_iter, mean_cos_sim / total_iter, mean_corr_coeff / total_iter, mean_mse / total_iter
             # print(f'The mean euclidean distance: {mean_euc_dis}')
             # print(f'The mean cosine similarity: {mean_cos_sim}')
@@ -336,18 +352,18 @@ class MTLFace(object):
             # print(f'Residual shape : {x_residual1.shape}')
             # print(f'Id shape : {x_id1.shape}')
 
-            transform = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.Resize((112, 112))
-            ])
-            x = x_id2
-            for i in range(x.shape[1] // 3):
-                if i > 5:
-                    break
-                start_channel = i * 3
-                end_channel = start_channel + 3
-                img = transform(x[:, start_channel:end_channel, :, :].squeeze())
-                img.save(f"tensor_image_{i}.png")
+            # transform = transforms.Compose([
+            #     transforms.ToPILImage(),
+            #     transforms.Resize((112, 112))
+            # ])
+            # x = x_id2
+            # for i in range(x.shape[1] // 3):
+            #     if i > 5:
+            #         break
+            #     start_channel = i * 3
+            #     end_channel = start_channel + 3
+            #     img = transform(x[:, start_channel:end_channel, :, :].squeeze())
+            #     img.save(f"tensor_image_{i}.png")
 
             # x_age1 = x_age1.flatten()
             # encoded_array = x_age1.view(112, -1).cpu().numpy()

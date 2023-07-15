@@ -76,7 +76,13 @@ class FR(BasicTask):
                 ])
             if opt.dataset_name == "lfw":
                 torch.cuda.empty_cache()
-                train_lfw_dataset = TrainingData('pairs.csv', lfw_transform)
+                if opt.lfw_mode == 0:
+                    train_lfw_dataset = TrainingData('pairs.csv', mode=0, transform=lfw_transform)
+                elif opt.lfw_mode == 1:
+                    train_lfw_dataset = TrainingData('pairs_mismatch.csv', mode=1, transform=lfw_transform)
+                else:
+                    print("Invalid LFW mode!! Defaulting to 0")
+                    train_lfw_dataset = TrainingData('pairs.csv', mode=0, transform=lfw_transform)
                 # test_lfw_dataset = EvaluationData('lfwTest.csv', lfw_transform)
                 weights = None
                 sampler_lfw = RandomSampler(
