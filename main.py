@@ -2,7 +2,6 @@ import torch
 import torch.distributed as dist
 from models.mtlface import MTLFace
 import pdb
-from dataset.preprocess import preprocess
 
 if __name__ == '__main__':
 
@@ -17,5 +16,7 @@ if __name__ == '__main__':
     model = MTLFace(opt)
     if not opt.evaluation_only:
         model.fit()
+        model.save_model()
     else:
-        model.evaluate_mtlface()
+        # model.evaluate_mtlface()
+        model.evaluate_gender_estimation()

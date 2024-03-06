@@ -19,9 +19,11 @@ from common.ops import (age2group, apply_weight_decay, convert_to_ddp,
 from common.sampler import RandomSampler
 from head.arcface import ArcFace
 from head.cosface import CosFace
+from head.custom_loss import CrossEntropyLossCalculator
 
 from . import BasicTask
 from .td_block import ViT
+import logging
 
 
 class FR(BasicTask):
@@ -31,6 +33,7 @@ class FR(BasicTask):
 
     def set_loader(self):
         opt = self.opt
+        logging.basicConfig(filename='fr.log', level=logging.INFO)
         if opt.dataset_name == "cvfr" or opt.dataset_name == "scaf":
             print("Loading CVFR or SCAF dataset..")
             self.train_transform = transforms.Compose(
@@ -50,6 +53,8 @@ class FR(BasicTask):
 
             train_dataset = TrainImageDataset(
                 opt.dataset_name, self.train_transform)
+            self.total_gender_count = train_dataset.get_gender_counts()
+            self.total_race_count = train_dataset.get_race_counts()
             # age_db_dataset = TrainingDataAge(
             #     'AgeDB.csv', self.evaluation_transform)
             # evaluation_dataset = EvaluationImageDataset(
@@ -128,7 +133,7 @@ class FR(BasicTask):
                 utk_dataset = UTK(opt.utk_eval_file, agedb_transform)
                 weights = None
                 sampler = RandomSampler(
-                    utk_dataset, batch_size=opt.batch_size, num_iter=opt.num_iter, weights=weights)
+                    utk_dataset, batch_size=opt.batch_size, num_iter=opt.evaluation_num_iter, weights=weights)
                 train_loader = torch.utils.data.DataLoader(utk_dataset,
                                                            batch_size=opt.batch_size,
                                                            sampler=sampler, pin_memory=True, num_workers=opt.num_worker,
@@ -148,6 +153,8 @@ class FR(BasicTask):
         backbone = backbone_dict[opt.backbone_name](input_size=opt.image_size)
         head = CosFace(in_features=512, out_features=len(self.prefetcher.__loader__.dataset.classes),
                        s=opt.head_s, m=opt.head_m)
+        # Custom Loss
+        class_based_loss = CrossEntropyLossCalculator()
 
         gender_estimation = GenderFeatureExtractor()
         race_estimation = EthnicityFeatureExtractor()
@@ -195,6 +202,7 @@ class FR(BasicTask):
         self.da_discriminator = da_discriminator
         self.grl = GradientReverseLayer()
         self.scaler = scaler
+        self.class_based_loss = class_based_loss
 
         self.logger.modules = [optimizer, backbone, head,
                                estimation_network, da_discriminator, scaler]
@@ -228,10 +236,26 @@ class FR(BasicTask):
         loss = self.compute_age_loss(x_age, x_group, ages)
         return loss
 
+    def count_genders(self, genders):
+        gender = {"Female": 0, "Male": 0}
+        for item in genders:
+            if item.item() == 0:
+                gender["Female"] += 1
+            else:
+                gender["Male"] += 1
+        return gender
+
+    def count_races(self, races):
+        print(f'Type of race:: {type(races)}')
+
     def train(self, inputs, n_iter):
         opt = self.opt
-
+        # pdb.set_trace()
         images, labels, ages, genders, races = inputs
+        # gender_counts = self.count_genders(genders)
+        # race_counts = self.count_races(races)
+        # print(f'Gender counts {gender_counts}')
+        # print(f'Races counts {race_counts}')
         self.backbone.train()
         self.head.train()
         self.da_discriminator.train()
@@ -252,30 +276,43 @@ class FR(BasicTask):
         id_loss = F.cross_entropy(self.head(embedding, labels), labels)
         x_age, x_group = self.estimation_network(x_age)
         age_loss = self.compute_age_loss(x_age, x_group, ages)
-        da_loss = self.forward_da(x_id, ages)
-        gender_loss = F.cross_entropy(self.gender_network(x_residual), genders)
+        # da_loss = self.forward_da(x_id, ages)
+        # gender_loss = F.cross_entropy(self.gender_network(x_residual), genders)
+        predicted_gender = self.gender_network(x_residual)
+        # pdb.set_trace()
+        self.class_based_loss.calculate_losses(predicted_gender, genders)
+        # print(f'Predicted gender {predicted_gender}')
+        # print(f'Actual gender {genders}')
+        # pdb.set_trace()
+        # print(f'Gender class based losses {self.class_based_loss.get_loss_values()}')
+        gender_based_loss = self.class_based_loss.get_loss_values()
+        gender_loss = torch.tensor(max(gender_based_loss.values()), requires_grad=True).cuda()
         race_loss = F.cross_entropy(self.race_network(x_residual), races)
         loss = id_loss * opt.fr_id_loss_weight + \
             age_loss * opt.fr_age_loss_weight + \
-            da_loss * opt.fr_da_loss_weight + gender_loss * opt.fr_gender_loss_weight + race_loss * opt.fr_race_loss_weight
+        gender_loss * opt.fr_gender_loss_weight + \
+        race_loss * opt.fr_race_loss_weight
 
         total_loss = loss
         if opt.amp:
             total_loss = self.scaler.scale(loss)
         self.optimizer.zero_grad()
         total_loss.backward()
-        apply_weight_decay(self.backbone, self.head, self.estimation_network, self.gender_network, self.race_network,
-                           weight_decay_factor=opt.weight_decay, wo_bn=True)
+        logging.info(f'Losses at iteration {n_iter} are {total_loss}')
+        logging.info(f'Gender based losses at iteration {n_iter} is {gender_based_loss}')
+        # self.logger.msg([total_loss, gender_loss], n_iter)
+        # apply_weight_decay(self.backbone, self.head, self.estimation_network, self.gender_network, self.race_network,
+        #                    weight_decay_factor=opt.weight_decay, wo_bn=True)
         if opt.amp:
             self.scaler.step(self.optimizer)
             self.scaler.update()
         else:
             self.optimizer.step()
 
-        id_loss, da_loss, age_loss, gender_loss, race_loss = reduce_loss(
-            id_loss, da_loss, age_loss, gender_loss, race_loss)
+        # id_loss, da_loss, age_loss, gender_loss, race_loss = reduce_loss(
+        #     id_loss, da_loss, age_loss, gender_loss, race_loss)
         lr = self.optimizer.param_groups[0]['lr']
-        self.logger.msg([id_loss, da_loss, age_loss, gender_loss, race_loss, lr], n_iter)
+        # self.logger.msg([id_loss, da_loss, age_loss, gender_loss, race_loss, lr], n_iter)
         return id_loss, age_loss, gender_loss, race_loss, total_loss
 
     def age_pretrained_eval(self):
@@ -399,27 +436,31 @@ class FR(BasicTask):
         total_incorrect_pred = 0
         with torch.no_grad():
             for _ in range(0, int(opt.evaluation_num_iter)):
-                image, age, gender, race = self.prefetcher.next()
-                embedding, x_id, x_age, x_residual = self.backbone(
-                    image, return_residual=True)
-                if opt.eval_gender:
-                    predicted_sex = self.gender_network(x_residual)
-                    predicted_sex = torch.argmax(predicted_sex).item()
-                    if predicted_sex == gender.item():
-                        total_correct_pred += 1
-                    else:
-                        total_incorrect_pred += 1
-                        print(f'The predicted sex {predicted_sex}')
-                        print(f'The actual sex {gender.item()}')
+                if self.prefetcher.next() is None:
+                    # print("Prefetcher next returns None.")
+                    continue
                 else:
-                    predicted_race = self.race_network(x_residual)
-                    predicted_race = torch.argmax(predicted_race).item()
-                    if predicted_race == race.item():
-                        total_correct_pred += 1
+                    image, age, gender, race = self.prefetcher.next()
+                    embedding, x_id, x_age, x_residual = self.backbone(
+                        image, return_residual=True)
+                    if opt.eval_gender:
+                        predicted_sex = self.gender_network(x_residual)
+                        predicted_sex = torch.argmax(predicted_sex).item()
+                        if predicted_sex == gender.item():
+                            total_correct_pred += 1
+                        else:
+                            total_incorrect_pred += 1
+                            # print(f'The predicted sex {predicted_sex}')
+                            # print(f'The actual sex {gender.item()}')
                     else:
-                        total_incorrect_pred += 1
-                        print(f'The predicted race {predicted_race}')
-                        print(f'The actual race {race.item()}')
+                        predicted_race = self.race_network(x_residual)
+                        predicted_race = torch.argmax(predicted_race).item()
+                        if predicted_race == race.item():
+                            total_correct_pred += 1
+                        else:
+                            total_incorrect_pred += 1
+                            print(f'The predicted race {predicted_race}')
+                            print(f'The actual race {race.item()}')
             accuracy = total_correct_pred / \
                 (total_correct_pred+total_incorrect_pred)
             print(f'Total correct predictions are {total_correct_pred}')

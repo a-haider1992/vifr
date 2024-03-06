@@ -4,6 +4,8 @@ import numpy as np
 from torchvision.datasets.folder import pil_loader
 import pandas as pd
 import random
+from collections import Counter
+import pdb
 
 from common.ops import age2group
 
@@ -42,15 +44,34 @@ class TrainImageDataset(BaseImageDataset):
         self.genders = self.data[:, 3].astype(int)
         self.races = self.data[:, 4].astype(int)
 
+         # Count the number of samples in each class
+        self.gender_counts = Counter(self.genders)
+        self.race_counts = Counter(self.races)
+
+
     def __getitem__(self, index):
+        # print("index: ", index)
         img = pil_loader(self.image_list[index])
         if self.transforms is not None:
             img = self.transforms(img)
         age = self.ages[index]
         gender = self.genders[index]
         race = self.races[index]
+       
         label = self.ids[index]
         return img, label, age, gender, race
+    
+    def get_gender_counts(self):
+        return self.gender_counts
+    
+    def get_race_counts(self):
+        return self.race_counts
+    
+    def get_gender_batch_counts(self, gender):
+        print("gender test-----------------")
+    
+    def get_race_batch_counts(self, batch):
+        print("race test-----------------")
 
 
 class AgingDataset(BaseImageDataset):

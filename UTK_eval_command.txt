@@ -1,0 +1,1 @@
+torchrun --nnodes=1 main.py --utk_eval_file UTK_all.csv --dataset_name UTK --evaluation_num_iter 100 --backbone_name ir50 --evaluation_only --train_fr --image_size 112 --id_pretrained_path models/backbone.pt --gender_pretrained_path models/age_estimation_model.pt

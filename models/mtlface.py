@@ -76,7 +76,7 @@ class MTLFace(object):
 
         # LOSS
         parser.add_argument("--fr_id_loss_weight",
-                            help='id loss weight', type=float, default=1.0)
+                            help='id loss weight', type=float, default=0.5)
         parser.add_argument("--fr_age_loss_weight",
                             help='age loss weight', type=float, default=0.0)
         parser.add_argument("--fr_gender_loss_weight",
@@ -104,11 +104,11 @@ class MTLFace(object):
         parser.add_argument(
             "--image_size", help='input image size', default=224, type=int)
         parser.add_argument(
-            "--num_iter", help='total epochs', type=int, default=125)
+            "--num_iter", help='total epochs', type=int, default=10)
         parser.add_argument(
             "--restore_iter", help='restore_iter', default=0, type=int)
         parser.add_argument(
-            "--batch_size", help='batch-size', default=0, type=int)
+            "--batch_size", help='batch-size', default=1, type=int)
         parser.add_argument(
             "--val_interval", help='val dataset interval iteration', type=int, default=1000)
 
@@ -191,8 +191,8 @@ class MTLFace(object):
             # img, label, age, gender
             fr_inputs = self.fr.prefetcher.next()
             if opt.train_fr:
-                l1, l2, gl, rl, l3 = self.fr.train(fr_inputs, n_iter)
-                train_losses.write(str(l1)+","+str(l2)+","+str(gl)+","+str(rl)+","+str(l3.item())+"\n")
+                self.fr.train(fr_inputs, n_iter)
+                # train_losses.write(str(l1)+","+str(l2)+","+str(gl)+","+str(rl)+","+str(l3.item())+"\n")
             if opt.train_fas:
                 # target_img, target_label
                 fas_inputs = self.fas.prefetcher.next()

@@ -6,6 +6,7 @@ import os
 import pandas
 from torchvision.datasets.folder import pil_loader
 import numpy as np
+import pdb
 
 def find_image_paths(images, image_num1, image_num2):
     for image in images:
@@ -141,23 +142,29 @@ class UTK(tordata.Dataset):
         self.transform = transform
         self.root = osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', 'UTK')
         df = pandas.read_csv(osp.join(osp.dirname(osp.dirname(__file__)), 'dataset', file), delimiter=',')
-        self.paths = df['path'].to_list()
-        self.ages = df['age'].to_list()
-        self.genders = df['gender'].to_list()
-        self.races = df['race'].to_list()
+        data = df.values
+        self.paths = data[:, 0].astype(str)
+        self.ages = data[:, 1].astype(int)
+        self.genders = data[:, 2].astype(int)
+        self.races = data[:, 3].astype(int)
         self.images = []
         self.classes = self.paths
+        # pdb.set_trace()
         for path in self.paths:
             path = os.path.join(self.root, path)
             self.images.append(path)
+        # print("len(self.images): ", len(self.images))
         
     def __getitem__(self, index):
+        # print("index: ", index)
         image = pil_loader(self.images[index])
         if self.transform is not None:
             image = self.transform(image)
         age = self.ages[index]
         gender = self.genders[index]
         race = self.races[index]
+        # print("age: ", age)
+        # print("gender: ", gender)
         return image, age, gender, race
     def __len__(self):
         return len(self.images)
